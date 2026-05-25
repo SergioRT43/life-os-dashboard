@@ -291,7 +291,7 @@
   }
 
   function todayStr() {
-    return new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
+    return new Date().toISOString().split('T')[0] // YYYY-MM-DD en UTC (igual que Supabase)
   }
 
   // ── Render character card ──
