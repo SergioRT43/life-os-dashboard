@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Life OS — Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --bg:        #0b0b14;
+      --bg2:       #12121f;
+      --bg3:       #1a1a2e;
+      --border:    #2a2a45;
+      --text:      #e2e2f0;
+      --muted:     #7070a0;
+      --vitalidad: #22c55e;
+      --fuerza:    #ef4444;
+      --riqueza:   #f59e0b;
+      --mente:     #3b82f6;
+      --disciplina:#a855f7;
+      --gold:      #fbbf24;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 24px 16px;
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+    .logo { font-size: 1.1rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
+    .last-updated { font-size: 0.75rem; color: var(--muted); }
+
+    /* ── Character card ── */
+    .character-card {
+      background: linear-gradient(135deg, var(--bg3) 0%, #1e1e3a 100%);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 24px;
+      align-items: center;
+    }
+    .avatar {
+      width: 72px; height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #6366f1, #8b5cf6);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 2rem;
+      flex-shrink: 0;
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 20px rgba(251,191,36,0.3);
+    }
+    .char-info { flex: 1; }
+    .char-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
+    .char-title { font-size: 0.85rem; color: var(--gold); margin-bottom: 10px; }
+    .xp-bar-wrap { display: flex; align-items: center; gap: 10px; }
+    .xp-bar-bg {
+      flex: 1; height: 8px;
+      background: var(--bg); border-radius: 99px;
+      overflow: hidden;
+    }
+    .xp-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, #6366f1, #a855f7);
+      border-radius: 99px;
+      transition: width 0.8s ease;
+    }
+    .xp-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+
+    .char-stats-right { text-align: right; }
+    .level-badge {
+      font-size: 2.5rem; font-weight: 800;
+      color: var(--gold);
+      line-height: 1;
+    }
+    .level-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
+    .streak-badge {
+      margin-top: 8px;
+      display: inline-flex; align-items: center; gap: 4px;
+      background: rgba(251,191,36,0.1);
+      border: 1px solid rgba(251,191,36,0.3);
+      border-radius: 99px;
+      padding: 3px 10px;
+      font-size: 0.8rem; color: var(--gold);
+    }
+
+    /* ── Today panel ── */
+    .today-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .stat-chip {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-chip .value { font-size: 1.6rem; font-weight: 700; }
+    .stat-chip .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+
+    /* ── Attributes grid ── */
+    .section-title {
+      font-size: 0.7rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: 2px;
+      margin-bottom: 12px;
+    }
+    .attrs-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    .attr-card {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    .attr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .attr-name { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
+    .attr-level { font-size: 1.1rem; font-weight: 700; }
+    .attr-bar-bg { height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; }
+    .attr-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
+    .attr-xp { font-size: 0.7rem; color: var(--muted); margin-top: 5px; }
+
+    /* ── Activity feed ── */
+    .feed-section { margin-bottom: 20px; }
+    .entry-item {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .entry-icon {
+      width: 36px; height: 36px; border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .entry-body { flex: 1; min-width: 0; }
+    .entry-summary { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .entry-time { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
+    .entry-xp { font-size: 0.8rem; font-weight: 600; color: var(--gold); white-space: nowrap; }
+
+    /* ── Nutrition ── */
+    .nutrition-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .macro-chip {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      text-align: center;
+    }
+    .macro-value { font-size: 1.3rem; font-weight: 700; }
+    .macro-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+
+    /* ── Loading / empty ── */
+    .loading { text-align: center; color: var(--muted); padding: 40px; }
+    .empty { text-align: center; color: var(--muted); padding: 24px; font-size: 0.85rem; }
+
+    /* ── Scrollbar ── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
+  </style>
+</head>
+<body>
+
+  <div class="header">
+    <span class="logo">⚔️ Life OS</span>
+    <span class="last-updated" id="lastUpdated">Cargando…</span>
+  </div>
+
+  <!-- Character card -->
+  <div class="character-card" id="characterCard">
+    <div class="loading">Cargando personaje…</div>
+  </div>
+
+  <!-- Today stats -->
+  <p class="section-title">Hoy</p>
+  <div class="today-grid" id="todayGrid">
+    <div class="stat-chip"><div class="value">—</div><div class="label">XP hoy</div></div>
+    <div class="stat-chip"><div class="value">—</div><div class="label">Comidas</div></div>
+    <div class="stat-chip"><div class="value">—</div><div class="label">Hábitos</div></div>
+    <div class="stat-chip"><div class="value">—</div><div class="label">Gym</div></div>
+  </div>
+
+  <!-- Attributes -->
+  <p class="section-title">Atributos</p>
+  <div class="attrs-grid" id="attrsGrid">
+    <div class="loading">…</div>
+  </div>
+
+  <!-- Nutrition today -->
+  <p class="section-title" id="nutritionTitle" style="display:none">Nutrición hoy</p>
+  <div class="nutrition-grid" id="nutritionGrid" style="display:none"></div>
+
+  <!-- Activity feed -->
+  <p class="section-title">Actividad reciente</p>
+  <div class="feed-section" id="feedSection">
+    <div class="empty">Sin actividad registrada hoy.</div>
+  </div>
+
+<script>
+  const SUPABASE_URL  = 'https://klorwiibsviqlwbplqdr.supabase.co'
+  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s'
+  const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+
+  // ── Level formula (mirror of SQL get_level) ──
+  function getLevel(xp) {
+    if (xp < 501)   return Math.floor(xp / 100) + 1
+    if (xp < 2001)  return 5  + Math.floor((xp - 500)  / 150)
+    if (xp < 6001)  return 15 + Math.floor((xp - 2000) / 266)
+    if (xp < 15001) return 30 + Math.floor((xp - 6000) / 450)
+    if (xp < 40001) return 50 + Math.floor((xp - 15000) / 1000)
+    return Math.min(100, 75 + Math.floor((xp - 40000) / 3000))
+  }
+
+  function xpForLevel(lvl) {
+    if (lvl <= 5)  return (lvl - 1) * 100
+    if (lvl <= 15) return 500  + (lvl - 5)  * 150
+    if (lvl <= 30) return 2000 + (lvl - 15) * 266
+    if (lvl <= 50) return 6000 + (lvl - 30) * 450
+    if (lvl <= 75) return 15000 + (lvl - 50) * 1000
+    return 40000 + (lvl - 75) * 3000
+  }
+
+  function levelProgress(xp) {
+    const lvl  = getLevel(xp)
+    if (lvl >= 100) return { lvl: 100, pct: 100, cur: xp, needed: xp }
+    const floor = xpForLevel(lvl)
+    const ceil  = xpForLevel(lvl + 1)
+    return { lvl, pct: Math.round((xp - floor) / (ceil - floor) * 100), cur: xp - floor, needed: ceil - floor }
+  }
+
+  function titleForLevel(lvl) {
+    if (lvl < 5)  return 'Novato'
+    if (lvl < 15) return 'Aprendiz'
+    if (lvl < 30) return 'Aventurero'
+    if (lvl < 50) return 'Guerrero'
+    if (lvl < 75) return 'Héroe'
+    if (lvl < 100) return 'Maestro'
+    return 'Leyenda'
+  }
+
+  const ATTRS = [
+    { key: 'xp_vitalidad',   label: 'Vitalidad',  emoji: '💚', color: 'var(--vitalidad)' },
+    { key: 'xp_fuerza',      label: 'Fuerza',     emoji: '🔴', color: 'var(--fuerza)'    },
+    { key: 'xp_riqueza',     label: 'Riqueza',    emoji: '💰', color: 'var(--riqueza)'   },
+    { key: 'xp_mente',       label: 'Mente',      emoji: '🔵', color: 'var(--mente)'     },
+    { key: 'xp_disciplina',  label: 'Disciplina', emoji: '💜', color: 'var(--disciplina)' },
+  ]
+
+  const ENTRY_ICONS = {
+    meal:    { emoji: '🍽️', bg: '#14532d' },
+    expense: { emoji: '💸', bg: '#451a03' },
+    income:  { emoji: '💰', bg: '#422006' },
+    workout: { emoji: '🏋️', bg: '#450a0a' },
+    habit:   { emoji: '✅', bg: '#1e1b4b' },
+    journal: { emoji: '📓', bg: '#0c1445' },
+    sleep:   { emoji: '🌙', bg: '#0a0a2e' },
+    unknown: { emoji: '❓', bg: '#1a1a2e' },
+  }
+
+  // ── Fetch helpers ──
+  async function supabase(path) {
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS })
+    return r.json()
+  }
+
+  function todayStr() {
+    return new Date().toLocaleDateString('en-CA') // YYYY-MM-DD in local time
+  }
+
+  // ── Render character card ──
+  function renderCharacter(d) {
+    const prog = levelProgress(d.total_xp)
+    document.getElementById('characterCard').innerHTML = `
+      <div class="avatar">⚔️</div>
+      <div class="char-info">
+        <div class="char-name">${d.name}</div>
+        <div class="char-title">${titleForLevel(d.level)}</div>
+        <div class="xp-bar-wrap">
+          <div class="xp-bar-bg">
+            <div class="xp-bar-fill" style="width:${prog.pct}%"></div>
+          </div>
+          <span class="xp-label">${prog.cur}/${prog.needed} XP</span>
+        </div>
+      </div>
+      <div class="char-stats-right">
+        <div class="level-badge">${d.level}</div>
+        <div class="level-label">Nivel</div>
+        <div class="streak-badge">🔥 ${d.current_streak} días</div>
+      </div>
+    `
+  }
+
+  // ── Render today stats ──
+  function renderToday(d) {
+    document.getElementById('todayGrid').innerHTML = `
+      <div class="stat-chip">
+        <div class="value" style="color:var(--gold)">${d.xp_today ?? 0}</div>
+        <div class="label">XP hoy</div>
+      </div>
+      <div class="stat-chip">
+        <div class="value">${d.meals_today ?? 0}</div>
+        <div class="label">Comidas</div>
+      </div>
+      <div class="stat-chip">
+        <div class="value">${d.habits_completed_today ?? 0}/${d.habits_total_today ?? 0}</div>
+        <div class="label">Hábitos</div>
+      </div>
+      <div class="stat-chip">
+        <div class="value">${d.workout_today ? '✅' : '—'}</div>
+        <div class="label">Gym</div>
+      </div>
+    `
+  }
+
+  // ── Render attributes ──
+  function renderAttrs(d) {
+    document.getElementById('attrsGrid').innerHTML = ATTRS.map(a => {
+      const prog = levelProgress(d[a.key] ?? 0)
+      return `
+        <div class="attr-card">
+          <div class="attr-header">
+            <span class="attr-name">${a.emoji} ${a.label}</span>
+            <span class="attr-level" style="color:${a.color}">Nv ${prog.lvl}</span>
+          </div>
+          <div class="attr-bar-bg">
+            <div class="attr-bar-fill" style="width:${prog.pct}%;background:${a.color}"></div>
+          </div>
+          <div class="attr-xp">${d[a.key] ?? 0} XP total · ${prog.cur}/${prog.needed} para siguiente nivel</div>
+        </div>
+      `
+    }).join('')
+  }
+
+  // ── Render nutrition ──
+  function renderNutrition(entries) {
+    const meals = entries.filter(e => e.type === 'meal')
+    if (!meals.length) return
+
+    let cal = 0, prot = 0, carbs = 0, fat = 0
+    meals.forEach(m => {
+      const macros = m.parsed_data?.estimated_macros
+      if (macros) {
+        cal   += macros.calories   ?? 0
+        prot  += macros.protein_g  ?? 0
+        carbs += macros.carbs_g    ?? 0
+        fat   += macros.fat_g      ?? 0
+      }
+    })
+
+    document.getElementById('nutritionTitle').style.display = 'block'
+    document.getElementById('nutritionGrid').style.display  = 'grid'
+    document.getElementById('nutritionGrid').innerHTML = `
+      <div class="macro-chip">
+        <div class="macro-value" style="color:var(--gold)">${Math.round(cal)}</div>
+        <div class="macro-label">Calorías</div>
+      </div>
+      <div class="macro-chip">
+        <div class="macro-value" style="color:var(--vitalidad)">${Math.round(prot)}g</div>
+        <div class="macro-label">Proteína</div>
+      </div>
+      <div class="macro-chip">
+        <div class="macro-value" style="color:var(--mente)">${Math.round(carbs)}g</div>
+        <div class="macro-label">Carbs</div>
+      </div>
+      <div class="macro-chip">
+        <div class="macro-value" style="color:var(--riqueza)">${Math.round(fat)}g</div>
+        <div class="macro-label">Grasa</div>
+      </div>
+    `
+  }
+
+  // ── Render feed ──
+  function renderFeed(entries) {
+    if (!entries.length) {
+      document.getElementById('feedSection').innerHTML = '<div class="empty">Sin actividad registrada hoy.</div>'
+      return
+    }
+    document.getElementById('feedSection').innerHTML = entries.map(e => {
+      const icon = ENTRY_ICONS[e.type] ?? ENTRY_ICONS.unknown
+      const xp   = e.xp_awarded
+      const xpTotal = xp ? Object.values(xp).reduce((a,b) => a + b, 0) : 0
+      const time = new Date(e.created_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+      return `
+        <div class="entry-item">
+          <div class="entry-icon" style="background:${icon.bg}">${icon.emoji}</div>
+          <div class="entry-body">
+            <div class="entry-summary">${e.summary ?? e.raw_input ?? '—'}</div>
+            <div class="entry-time">${time}</div>
+          </div>
+          ${xpTotal > 0 ? `<div class="entry-xp">+${xpTotal} XP</div>` : ''}
+        </div>
+      `
+    }).join('')
+  }
+
+  // ── Main load ──
+  async function loadDashboard() {
+    try {
+      const [dashData, entries] = await Promise.all([
+        supabase('dashboard_today?limit=1'),
+        supabase(`entries?entry_date=eq.${todayStr()}&order=created_at.desc&limit=20`),
+      ])
+
+      const d = Array.isArray(dashData) ? dashData[0] : dashData
+      if (d) {
+        renderCharacter(d)
+        renderToday(d)
+        renderAttrs(d)
+      }
+
+      if (Array.isArray(entries)) {
+        renderNutrition(entries)
+        renderFeed(entries)
+      }
+
+      document.getElementById('lastUpdated').textContent =
+        'Actualizado: ' + new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
+
+    } catch (err) {
+      console.error(err)
+    }
+  }
+
+  loadDashboard()
+  setInterval(loadDashboard, 60000) // refresca cada 60 segundos
+</script>
+</body>
+</html>
