@@ -1,455 +1,702 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Life OS — Dashboard</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>AETHER — Dashboard</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ── TOKENS ─────────────────────────────────────────────── */
+:root {
+  --bg-void:     #07080F; --bg-base:    #0B0D17;
+  --bg-surface:  #111420; --bg-elevated:#161A29; --bg-inset:#0A0C15;
+  --s-hair:  #1E223A; --s-soft:  #262B47; --s-strong: #3A406A;
+  --fg1: #F2F3FA; --fg2: #B6BBD4; --fg3: #7B82A3; --fg4: #4A5072;
+  --violet:  #8A6CFF; --violet2: #A88BFF; --violet3: #5B43C2;
+  --gold:    #FFC247; --gold2:   #FFD879;
+  --str:  #FF5C7A; --vit: #4ED1A1; --wlt: #FFC247;
+  --int:  #4FB6FF; --spr: #B388FF;
+  --ok:   #4ED1A1; --warn: #FFC247; --bad: #FF5C7A;
+  --fd: "Space Grotesk", sans-serif; --fb: "Manrope", sans-serif;
+  --sw: 220px; --th: 70px;
+  --r4:4px; --r8:8px; --r12:12px; --r16:16px; --rpill:999px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{min-height:100vh;background:var(--bg-void);color:var(--fg1);
+  font-family:var(--fb);-webkit-font-smoothing:antialiased;font-size:15px}
+a{text-decoration:none;color:inherit}
 
-    :root {
-      --bg:        #0b0b14;
-      --bg2:       #12121f;
-      --bg3:       #1a1a2e;
-      --border:    #2a2a45;
-      --text:      #e2e2f0;
-      --muted:     #7070a0;
-      --vitalidad: #22c55e;
-      --fuerza:    #ef4444;
-      --riqueza:   #f59e0b;
-      --mente:     #3b82f6;
-      --disciplina:#a855f7;
-      --gold:      #fbbf24;
-    }
+/* ── SIDEBAR ─────────────────────────────────────────────── */
+.sidebar{
+  position:fixed;left:0;top:0;bottom:0;width:var(--sw);
+  background:var(--bg-void);border-right:1px solid var(--s-hair);
+  display:flex;flex-direction:column;z-index:100;
+}
+.brand{
+  display:flex;align-items:center;gap:10px;padding:18px 16px;
+  border-bottom:1px solid var(--s-hair);
+}
+.brand-name{font-family:var(--fd);font-size:13px;font-weight:700;
+  letter-spacing:3px;color:var(--fg1)}
+.nav{flex:1;overflow-y:auto;padding:14px 8px}
+.nav-sec{font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg4);padding:10px 8px 4px;margin-top:4px}
+.nav-sec:first-child{margin-top:0}
+.ni{
+  display:flex;align-items:center;gap:9px;padding:8px 10px;
+  border-radius:var(--r8);color:var(--fg3);font-size:13px;font-weight:500;
+  transition:background .15s,color .15s;cursor:pointer;margin-bottom:1px;
+  position:relative;
+}
+.ni:hover{background:rgba(138,108,255,.06);color:var(--fg2)}
+.ni.active{background:rgba(138,108,255,.12);color:var(--fg1)}
+.ni svg{flex-shrink:0;opacity:.65}
+.ni.active svg,.ni:hover svg{opacity:1}
+.nb{margin-left:auto;background:var(--violet);color:#fff;font-size:10px;
+  font-weight:700;padding:2px 6px;border-radius:var(--rpill);min-width:18px;text-align:center}
+.sfoot{padding:12px 14px;border-top:1px solid var(--s-hair);
+  display:flex;align-items:center;gap:10px}
+.mini-av{
+  width:32px;height:32px;border-radius:var(--r8);flex-shrink:0;
+  background:linear-gradient(135deg,var(--violet3),var(--violet));
+  display:flex;align-items:center;justify-content:center;
+  font-size:14px;font-weight:700;color:#fff;
+}
+.mini-name{font-size:13px;font-weight:600;color:var(--fg1)}
+.mini-meta{font-size:11px;color:var(--fg3)}
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      min-height: 100vh;
-      padding: 24px 16px;
-    }
+/* ── TOPBAR ──────────────────────────────────────────────── */
+.topbar{
+  position:fixed;top:0;left:var(--sw);right:0;height:var(--th);
+  background:var(--bg-base);border-bottom:1px solid var(--s-hair);
+  display:flex;align-items:center;padding:0 28px;z-index:90;gap:14px;
+}
+.tb-greet{flex:1;min-width:0}
+.tb-date{font-size:10px;font-weight:600;letter-spacing:1.5px;
+  text-transform:uppercase;color:var(--fg3);margin-bottom:1px}
+.tb-name{font-family:var(--fd);font-size:19px;font-weight:700;line-height:1.1}
+.streak-pill{
+  display:flex;align-items:center;gap:7px;background:#0E0D1C;
+  border:1px solid rgba(255,194,71,.22);border-radius:var(--rpill);
+  padding:7px 16px;white-space:nowrap;
+}
+.sp-lbl{font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg4)}
+.sp-num{font-family:var(--fd);font-size:19px;font-weight:700;
+  color:var(--gold);line-height:1}
+.sp-days{font-size:10px;color:var(--fg3)}
+.ib{
+  width:36px;height:36px;border-radius:var(--r8);
+  border:1px solid var(--s-soft);background:transparent;
+  color:var(--fg3);cursor:pointer;display:flex;align-items:center;
+  justify-content:center;transition:border-color .15s,color .15s;
+}
+.ib:hover{border-color:var(--s-strong);color:var(--fg2)}
+.cta{
+  display:flex;align-items:center;gap:6px;background:var(--violet);
+  color:#fff;border:none;border-radius:var(--r12);padding:9px 16px;
+  font-family:var(--fb);font-size:13px;font-weight:600;cursor:pointer;
+  transition:background .15s;
+}
+.cta:hover{background:var(--violet2)}
 
-    /* ── Header ── */
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 28px;
-    }
-    .logo { font-size: 1.1rem; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; }
-    .last-updated { font-size: 0.75rem; color: var(--muted); }
+/* ── LAYOUT ──────────────────────────────────────────────── */
+.app{margin-left:var(--sw);padding-top:var(--th)}
+.content{max-width:900px;margin:0 auto;padding:24px 28px 64px}
 
-    /* ── Character card ── */
-    .character-card {
-      background: linear-gradient(135deg, var(--bg3) 0%, #1e1e3a 100%);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 20px;
-      display: flex;
-      gap: 24px;
-      align-items: center;
-    }
-    .avatar {
-      width: 72px; height: 72px;
-      border-radius: 50%;
-      background: linear-gradient(135deg, #6366f1, #8b5cf6);
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem;
-      flex-shrink: 0;
-      border: 3px solid var(--gold);
-      box-shadow: 0 0 20px rgba(251,191,36,0.3);
-    }
-    .char-info { flex: 1; }
-    .char-name { font-size: 1.5rem; font-weight: 700; margin-bottom: 4px; }
-    .char-title { font-size: 0.85rem; color: var(--gold); margin-bottom: 10px; }
-    .xp-bar-wrap { display: flex; align-items: center; gap: 10px; }
-    .xp-bar-bg {
-      flex: 1; height: 8px;
-      background: var(--bg); border-radius: 99px;
-      overflow: hidden;
-    }
-    .xp-bar-fill {
-      height: 100%;
-      background: linear-gradient(90deg, #6366f1, #a855f7);
-      border-radius: 99px;
-      transition: width 0.8s ease;
-    }
-    .xp-label { font-size: 0.75rem; color: var(--muted); white-space: nowrap; }
+/* ── CHARACTER CARD ──────────────────────────────────────── */
+.char-card{
+  background:linear-gradient(135deg,#0D1020 0%,#131830 50%,#0D1020 100%);
+  border:1px solid var(--s-soft);border-radius:var(--r16);
+  padding:22px 26px;margin-bottom:18px;position:relative;overflow:hidden;
+}
+.char-card::before{
+  content:'';position:absolute;inset:0;pointer-events:none;
+  background:radial-gradient(ellipse at 88% 50%,rgba(138,108,255,.11) 0%,transparent 65%);
+}
+.char-inner{display:flex;align-items:center;gap:18px;position:relative}
+.char-av{
+  width:70px;height:70px;border-radius:14px;flex-shrink:0;
+  background:linear-gradient(135deg,var(--violet3),var(--violet));
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--fd);font-size:26px;font-weight:800;color:#fff;
+  box-shadow:0 0 24px rgba(138,108,255,.35);
+}
+.char-body{flex:1;min-width:0}
+.char-name{font-family:var(--fd);font-size:21px;font-weight:700;margin-bottom:6px}
+.char-badges{display:flex;align-items:center;gap:7px;margin-bottom:9px;flex-wrap:wrap}
+.cb{
+  font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;
+  padding:3px 9px;border-radius:var(--rpill);border:1px solid;
+}
+.cb-class{background:rgba(138,108,255,.1);border-color:rgba(138,108,255,.3);color:var(--violet2)}
+.cb-streak{background:rgba(255,194,71,.08);border-color:rgba(255,194,71,.25);color:var(--gold)}
+.cb-active{background:rgba(78,209,161,.1);border-color:rgba(78,209,161,.3);color:var(--ok)}
+.xp-row{display:flex;align-items:center;gap:10px}
+.xp-track{flex:1;height:5px;background:var(--bg-inset);border-radius:var(--rpill);overflow:hidden}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));
+  border-radius:var(--rpill);transition:width .9s ease}
+.xp-txt{font-size:11px;color:var(--fg3);white-space:nowrap}
+.char-r{text-align:center;flex-shrink:0}
+.lv-num{font-family:var(--fd);font-size:46px;font-weight:800;color:var(--gold);line-height:1}
+.lv-lbl{font-size:9px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg4)}
 
-    .char-stats-right { text-align: right; }
-    .level-badge {
-      font-size: 2.5rem; font-weight: 800;
-      color: var(--gold);
-      line-height: 1;
-    }
-    .level-label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; }
-    .streak-badge {
-      margin-top: 8px;
-      display: inline-flex; align-items: center; gap: 4px;
-      background: rgba(251,191,36,0.1);
-      border: 1px solid rgba(251,191,36,0.3);
-      border-radius: 99px;
-      padding: 3px 10px;
-      font-size: 0.8rem; color: var(--gold);
-    }
+/* ── STAT TILES ──────────────────────────────────────────── */
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:22px}
+@media(max-width:680px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{
+  background:var(--bg-surface);border:1px solid var(--s-hair);
+  border-radius:var(--r16);padding:15px 17px;
+}
+.tile-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.tile-lbl{font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg3)}
+.tile-ico{width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;font-size:14px}
+.tile-val{font-family:var(--fd);font-size:24px;font-weight:700;
+  color:var(--fg1);line-height:1.1;margin-bottom:3px}
+.tile-sub{font-size:11px;color:var(--fg4)}
 
-    /* ── Today panel ── */
-    .today-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .stat-chip {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-      text-align: center;
-    }
-    .stat-chip .value { font-size: 1.6rem; font-weight: 700; }
-    .stat-chip .label { font-size: 0.7rem; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; }
+/* ── SECTION HEADER ──────────────────────────────────────── */
+.sh{display:flex;align-items:center;gap:9px;margin-bottom:13px}
+.sh-eye{font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg4)}
+.sh-title{font-family:var(--fd);font-size:16px;font-weight:700;color:var(--fg1)}
+.sh-badge{background:rgba(138,108,255,.14);color:var(--violet2);font-size:11px;
+  font-weight:700;padding:2px 8px;border-radius:var(--rpill)}
+.sh-link{margin-left:auto;font-size:11px;font-weight:600;
+  color:var(--violet);letter-spacing:.5px;transition:color .15s}
+.sh-link:hover{color:var(--violet2)}
+.sh-upd{margin-left:auto;font-size:11px;color:var(--fg4)}
 
-    /* ── Attributes grid ── */
-    .section-title {
-      font-size: 0.7rem; color: var(--muted);
-      text-transform: uppercase; letter-spacing: 2px;
-      margin-bottom: 12px;
-    }
-    .attrs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-      gap: 12px;
-      margin-bottom: 20px;
-    }
-    .attr-card {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 12px;
-      padding: 16px;
-    }
-    .attr-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
-    .attr-name { font-size: 0.85rem; font-weight: 600; display: flex; align-items: center; gap: 6px; }
-    .attr-level { font-size: 1.1rem; font-weight: 700; }
-    .attr-bar-bg { height: 6px; background: var(--bg); border-radius: 99px; overflow: hidden; }
-    .attr-bar-fill { height: 100%; border-radius: 99px; transition: width 0.8s ease; }
-    .attr-xp { font-size: 0.7rem; color: var(--muted); margin-top: 5px; }
+/* ── GTD WIDGET ──────────────────────────────────────────── */
+.card{
+  background:var(--bg-surface);border:1px solid var(--s-hair);
+  border-radius:var(--r16);padding:18px 20px;margin-bottom:20px;
+}
+.ctx-row{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:11px}
+.ctx-btn{
+  padding:3px 11px;border-radius:var(--rpill);font-size:11px;font-weight:500;
+  border:1px solid var(--s-soft);background:transparent;color:var(--fg3);
+  cursor:pointer;transition:all .15s;
+}
+.ctx-btn.on,.ctx-btn:hover{
+  background:rgba(138,108,255,.12);border-color:var(--violet);color:var(--violet2)}
 
-    /* ── Activity feed ── */
-    .feed-section { margin-bottom: 20px; }
-    .entry-item {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px 16px;
-      margin-bottom: 8px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-    .entry-icon {
-      width: 36px; height: 36px; border-radius: 8px;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 1.1rem; flex-shrink: 0;
-    }
-    .entry-body { flex: 1; min-width: 0; }
-    .entry-summary { font-size: 0.9rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .entry-time { font-size: 0.72rem; color: var(--muted); margin-top: 2px; }
-    .entry-xp { font-size: 0.8rem; font-weight: 600; color: var(--gold); white-space: nowrap; }
+/* ── TASKS ───────────────────────────────────────────────── */
+.ti{
+  display:flex;align-items:flex-start;gap:11px;padding:9px 12px;
+  border-radius:var(--r12);background:var(--bg-elevated);
+  border:1px solid var(--s-hair);border-left:3px solid var(--s-soft);
+  margin-bottom:6px;cursor:pointer;transition:background .15s;
+}
+.ti:hover{background:rgba(138,108,255,.04)}
+.ti.p1{border-left-color:var(--bad)}
+.ti.p2{border-left-color:var(--warn)}
+.ti.p3{border-left-color:var(--s-soft)}
+.t-chk{width:17px;height:17px;border-radius:50%;border:2px solid var(--s-soft);
+  flex-shrink:0;margin-top:1px;transition:border-color .15s}
+.ti:hover .t-chk{border-color:var(--violet)}
+.t-body{flex:1;min-width:0}
+.t-title{font-size:13px;font-weight:500;line-height:1.35;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.t-meta{display:flex;align-items:center;gap:5px;margin-top:3px}
+.t-ctx{font-size:10px;padding:1px 7px;border-radius:var(--rpill);
+  background:rgba(138,108,255,.11);color:var(--violet2);font-weight:500}
+.t-proj{font-size:10px;color:var(--fg4)}
+.t-xp{margin-left:auto;font-size:10px;font-weight:600;
+  color:var(--gold);white-space:nowrap}
+.empty{text-align:center;color:var(--fg4);padding:26px;font-size:13px}
 
-    /* ── Nutrition ── */
-    .nutrition-grid {
-      display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-    .macro-chip {
-      background: var(--bg2);
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 12px;
-      text-align: center;
-    }
-    .macro-value { font-size: 1.3rem; font-weight: 700; }
-    .macro-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; margin-top: 2px; }
+/* ── ATTRIBUTES ──────────────────────────────────────────── */
+.attr-row{
+  display:flex;align-items:center;gap:13px;padding:11px 0;
+  border-bottom:1px solid var(--s-hair);
+}
+.attr-row:last-child{border-bottom:none}
+.attr-ico{
+  width:38px;height:38px;border-radius:9px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:17px;
+}
+.attr-body{flex:1;min-width:0}
+.attr-name{font-size:13px;font-weight:600;color:var(--fg1);margin-bottom:1px}
+.attr-sub{font-size:10px;color:var(--fg3);margin-bottom:5px}
+.attr-xp-row{display:flex;align-items:center;gap:8px}
+.attr-bar{flex:1;height:4px;background:var(--bg-inset);
+  border-radius:var(--rpill);overflow:hidden}
+.attr-fill{height:100%;border-radius:var(--rpill);transition:width .9s ease}
+.attr-txt{font-size:10px;color:var(--fg3);white-space:nowrap}
+.attr-lv{
+  font-family:var(--fd);font-size:20px;font-weight:700;
+  flex-shrink:0;min-width:36px;text-align:right;line-height:1;
+}
+.attr-lv span{display:block;font-family:var(--fb);font-size:8px;
+  letter-spacing:1px;text-transform:uppercase;color:var(--fg4);font-weight:600}
 
-    /* ── Loading / empty ── */
-    .loading { text-align: center; color: var(--muted); padding: 40px; }
-    .empty { text-align: center; color: var(--muted); padding: 24px; font-size: 0.85rem; }
+/* ── FINANCE ─────────────────────────────────────────────── */
+.fin-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+.fin-card{
+  background:var(--bg-surface);border:1px solid var(--s-hair);
+  border-radius:var(--r16);padding:16px 18px;
+}
+.fin-card.net{
+  grid-column:1/-1;display:flex;align-items:center;
+  justify-content:space-between;
+}
+.fin-ico{width:28px;height:28px;border-radius:7px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:13px;margin-bottom:7px}
+.fin-eye{font-size:9px;font-weight:700;letter-spacing:2px;
+  text-transform:uppercase;color:var(--fg3);margin-bottom:3px}
+.fin-val{font-family:var(--fd);font-size:24px;font-weight:700;margin-bottom:3px}
+.fin-trend{font-size:11px;color:var(--fg4)}
+.fin-trend.up{color:var(--ok)}.fin-trend.dn{color:var(--bad)}
 
-    /* ── Scrollbar ── */
-    ::-webkit-scrollbar { width: 4px; }
-    ::-webkit-scrollbar-track { background: var(--bg); }
-    ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 99px; }
-  </style>
+/* ── FEED ────────────────────────────────────────────────── */
+.ei{
+  display:flex;align-items:center;gap:11px;padding:9px 12px;
+  border-radius:var(--r12);background:var(--bg-elevated);
+  border:1px solid var(--s-hair);margin-bottom:6px;transition:border-color .15s;
+}
+.ei:hover{border-color:var(--s-soft)}
+.ei-ico{width:34px;height:34px;border-radius:8px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;font-size:15px}
+.ei-body{flex:1;min-width:0}
+.ei-sum{font-size:13px;font-weight:500;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.ei-time{font-size:11px;color:var(--fg3);margin-top:2px}
+.ei-xp{font-size:11px;font-weight:600;color:var(--gold);white-space:nowrap}
+
+/* ── MISC ────────────────────────────────────────────────── */
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-track{background:var(--bg-void)}
+::-webkit-scrollbar-thumb{background:var(--s-soft);border-radius:99px}
+</style>
 </head>
 <body>
 
-  <div class="header">
-    <span class="logo">⚔️ Life OS</span>
-    <span class="last-updated" id="lastUpdated">Cargando…</span>
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="brand">
+    <svg width="30" height="30" viewBox="0 0 56 56" fill="none">
+      <defs><linearGradient id="g0" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0%" stop-color="#A88BFF"/><stop offset="100%" stop-color="#5B43C2"/>
+      </linearGradient></defs>
+      <path d="M28 4L48 16v24L28 52 8 40V16z" stroke="url(#g0)" stroke-width="2" fill="#8A6CFF10"/>
+      <path d="M28 14L18 40M28 14L38 40M22 32h12" stroke="#FFC247" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+      <circle cx="28" cy="14" r="2" fill="#FFD879"/>
+    </svg>
+    <span class="brand-name">AETHER</span>
+  </div>
+  <nav class="nav">
+    <div class="nav-sec">Adventure</div>
+    <a class="ni active" href="index.html">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      Dashboard
+    </a>
+    <a class="ni" href="gtd.html" id="navGtd">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      Quest log
+      <span class="nb" id="inboxBadge">0</span>
+    </a>
+    <a class="ni" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="20" x2="12" y2="10"/><line x1="18" y1="20" x2="18" y2="4"/><line x1="6" y1="20" x2="6" y2="16"/></svg>
+      Stats
+    </a>
+    <a class="ni" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+      Inventory
+    </a>
+    <div class="nav-sec">Social</div>
+    <a class="ni" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="7" r="4"/><path d="M17 11a4 4 0 1 0 0-8M22 21v-2a4 4 0 0 0-3-3.85M3 21v-2a4 4 0 0 1 3-3.85"/><path d="M2 21h14"/></svg>
+      Guild
+    </a>
+    <a class="ni" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5H6M18 9h1.5a2.5 2.5 0 0 0 0-5H18M4 22h16M10 14.66V17c0 .55-.47.98-.97 1.21C7.85 18.75 7 20.24 7 22M14 14.66V17c0 .55.47.98.97 1.21C16.15 18.75 17 20.24 17 22M18 2H6v7a6 6 0 0 0 12 0z"/></svg>
+      Achievements
+    </a>
+    <div class="nav-sec">System</div>
+    <a class="ni" href="#">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Settings
+    </a>
+  </nav>
+  <div class="sfoot">
+    <div class="mini-av" id="sAv">A</div>
+    <div>
+      <div class="mini-name" id="sName">Aren</div>
+      <div class="mini-meta" id="sMeta">Lv 1 · Novato</div>
+    </div>
+  </div>
+</aside>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <div class="tb-greet">
+    <div class="tb-date" id="tbDate"></div>
+    <div class="tb-name" id="tbName">Welcome back, Aren</div>
+  </div>
+  <div class="streak-pill">
+    <span>🔥</span>
+    <span class="sp-lbl">Streak</span>
+    <span class="sp-num" id="spNum">—</span>
+    <span class="sp-days">days</span>
+  </div>
+  <button class="ib" title="Buscar">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+  </button>
+  <button class="ib" title="Notificaciones">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"/></svg>
+  </button>
+  <a class="cta" href="gtd.html">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+    New quest
+  </a>
+</header>
+
+<!-- MAIN -->
+<main class="app">
+<div class="content">
+
+  <!-- CHARACTER -->
+  <div class="char-card" id="charCard">
+    <div class="char-inner">
+      <div class="char-av" id="charAv">A</div>
+      <div class="char-body">
+        <div class="char-name" id="charName" style="width:140px;height:20px;background:var(--s-hair);border-radius:4px;animation:pulse 1.5s infinite"></div>
+        <div class="char-badges" id="charBadges"></div>
+        <div class="xp-row">
+          <div class="xp-track"><div class="xp-fill" id="xpFill" style="width:0%"></div></div>
+          <span class="xp-txt" id="xpTxt">— / — XP</span>
+        </div>
+      </div>
+      <div class="char-r">
+        <div class="lv-num" id="lvNum">—</div>
+        <div class="lv-lbl">Level</div>
+      </div>
+    </div>
+  </div>
+  <style>@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}</style>
+
+  <!-- TILES -->
+  <div class="tiles" id="tiles">
+    <div class="tile"><div class="tile-top"><span class="tile-lbl">XP Hoy</span><div class="tile-ico" style="background:rgba(255,194,71,.1)">⚡</div></div><div class="tile-val" style="color:var(--gold)">—</div><div class="tile-sub">puntos ganados</div></div>
+    <div class="tile"><div class="tile-top"><span class="tile-lbl">Comidas</span><div class="tile-ico" style="background:rgba(78,209,161,.1)">🍽️</div></div><div class="tile-val">—</div><div class="tile-sub">registradas</div></div>
+    <div class="tile"><div class="tile-top"><span class="tile-lbl">Hábitos</span><div class="tile-ico" style="background:rgba(138,108,255,.1)">✅</div></div><div class="tile-val">—</div><div class="tile-sub">de hoy</div></div>
+    <div class="tile"><div class="tile-top"><span class="tile-lbl">Gym</span><div class="tile-ico" style="background:rgba(255,92,122,.1)">🏋️</div></div><div class="tile-val">—</div><div class="tile-sub">entrenamiento</div></div>
   </div>
 
-  <!-- Character card -->
-  <div class="character-card" id="characterCard">
-    <div class="loading">Cargando personaje…</div>
+  <!-- GTD WIDGET -->
+  <div class="card">
+    <div class="sh">
+      <span class="sh-eye">GTD · Bitácora</span>
+      <span class="sh-title">Próximas acciones</span>
+      <span class="sh-badge" id="tCount">0</span>
+      <a class="sh-link" href="gtd.html">VER TODO →</a>
+    </div>
+    <div class="ctx-row" id="ctxBtns">
+      <button class="ctx-btn on" data-ctx="all">Todas</button>
+      <button class="ctx-btn" data-ctx="@trabajo">@trabajo</button>
+      <button class="ctx-btn" data-ctx="@casa">@casa</button>
+      <button class="ctx-btn" data-ctx="@llamar">@llamar</button>
+      <button class="ctx-btn" data-ctx="@compras">@compras</button>
+    </div>
+    <div id="tasksWrap"><div class="empty">Sin tareas pendientes 🎯</div></div>
   </div>
 
-  <!-- Today stats -->
-  <p class="section-title">Hoy</p>
-  <div class="today-grid" id="todayGrid">
-    <div class="stat-chip"><div class="value">—</div><div class="label">XP hoy</div></div>
-    <div class="stat-chip"><div class="value">—</div><div class="label">Comidas</div></div>
-    <div class="stat-chip"><div class="value">—</div><div class="label">Hábitos</div></div>
-    <div class="stat-chip"><div class="value">—</div><div class="label">Gym</div></div>
+  <!-- ATTRIBUTES -->
+  <div class="sh"><span class="sh-title">Attributes</span><a class="sh-link" href="#">View tree →</a></div>
+  <div class="card" id="attrsCard" style="padding:4px 20px"></div>
+
+  <!-- FINANCES -->
+  <div id="finWrap" style="display:none;margin-bottom:20px">
+    <div class="sh"><span class="sh-title">Finanzas · este mes</span></div>
+    <div class="fin-grid" id="finGrid"></div>
   </div>
 
-  <!-- Attributes -->
-  <p class="section-title">Atributos</p>
-  <div class="attrs-grid" id="attrsGrid">
-    <div class="loading">…</div>
+  <!-- FEED -->
+  <div class="sh">
+    <span class="sh-title">Actividad reciente</span>
+    <span class="sh-upd" id="updAt">—</span>
   </div>
-
-  <!-- Nutrition today -->
-  <p class="section-title" id="nutritionTitle" style="display:none">Nutrición hoy</p>
-  <div class="nutrition-grid" id="nutritionGrid" style="display:none"></div>
-
-  <!-- Activity feed -->
-  <p class="section-title">Actividad reciente</p>
-  <div class="feed-section" id="feedSection">
+  <div class="card" id="feedWrap" style="padding:8px 12px">
     <div class="empty">Sin actividad registrada hoy.</div>
   </div>
 
+</div>
+</main>
+
 <script>
-  const SUPABASE_URL  = 'https://klorwiibsviqlwbplqdr.supabase.co'
-  const SUPABASE_KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s'
-  const HEADERS = { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` }
+/* ── CONFIG ─────────────────────────────────────────────── */
+const BASE = 'https://klorwiibsviqlwbplqdr.supabase.co'
+const KEY  = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s'
+const HDR  = { apikey: KEY, Authorization: `Bearer ${KEY}` }
 
-  // ── Level formula (mirror of SQL get_level) ──
-  function getLevel(xp) {
-    if (xp < 501)   return Math.floor(xp / 100) + 1
-    if (xp < 2001)  return 5  + Math.floor((xp - 500)  / 150)
-    if (xp < 6001)  return 15 + Math.floor((xp - 2000) / 266)
-    if (xp < 15001) return 30 + Math.floor((xp - 6000) / 450)
-    if (xp < 40001) return 50 + Math.floor((xp - 15000) / 1000)
-    return Math.min(100, 75 + Math.floor((xp - 40000) / 3000))
-  }
+async function db(path) {
+  const r = await fetch(`${BASE}/rest/v1/${path}`, { headers: HDR })
+  if (!r.ok) throw new Error(`DB ${r.status}: ${path}`)
+  return r.json()
+}
 
-  function xpForLevel(lvl) {
-    if (lvl <= 5)  return (lvl - 1) * 100
-    if (lvl <= 15) return 500  + (lvl - 5)  * 150
-    if (lvl <= 30) return 2000 + (lvl - 15) * 266
-    if (lvl <= 50) return 6000 + (lvl - 30) * 450
-    if (lvl <= 75) return 15000 + (lvl - 50) * 1000
-    return 40000 + (lvl - 75) * 3000
-  }
+function utcToday()    { return new Date().toISOString().split('T')[0] }
+function firstOfMonth(){ const d=new Date(); return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-01` }
 
-  function levelProgress(xp) {
-    const lvl  = getLevel(xp)
-    if (lvl >= 100) return { lvl: 100, pct: 100, cur: xp, needed: xp }
-    const floor = xpForLevel(lvl)
-    const ceil  = xpForLevel(lvl + 1)
-    return { lvl, pct: Math.round((xp - floor) / (ceil - floor) * 100), cur: xp - floor, needed: ceil - floor }
-  }
+/* ── LEVEL MATH (exact copy from original) ─────────────── */
+function getLevel(xp){
+  if(xp<501)   return Math.floor(xp/100)+1
+  if(xp<2001)  return 5+Math.floor((xp-500)/150)
+  if(xp<6001)  return 15+Math.floor((xp-2000)/266)
+  if(xp<15001) return 30+Math.floor((xp-6000)/450)
+  if(xp<40001) return 50+Math.floor((xp-15000)/1000)
+  return Math.min(100,75+Math.floor((xp-40000)/3000))
+}
+function xpForLv(l){
+  if(l<=5)  return (l-1)*100
+  if(l<=15) return 500+(l-5)*150
+  if(l<=30) return 2000+(l-15)*266
+  if(l<=50) return 6000+(l-30)*450
+  if(l<=75) return 15000+(l-50)*1000
+  return 40000+(l-75)*3000
+}
+function lvProg(xp){
+  const l=getLevel(xp)
+  if(l>=100) return{l,pct:100,cur:xp,need:xp}
+  const fl=xpForLv(l),cl=xpForLv(l+1)
+  return{l,pct:Math.round((xp-fl)/(cl-fl)*100),cur:xp-fl,need:cl-fl}
+}
+function titleFor(l){
+  if(l<5)  return 'Novato'
+  if(l<15) return 'Aprendiz'
+  if(l<30) return 'Aventurero'
+  if(l<50) return 'Guerrero'
+  if(l<75) return 'Héroe'
+  if(l<100) return 'Maestro'
+  return 'Leyenda ✦'
+}
 
-  function titleForLevel(lvl) {
-    if (lvl < 5)  return 'Novato'
-    if (lvl < 15) return 'Aprendiz'
-    if (lvl < 30) return 'Aventurero'
-    if (lvl < 50) return 'Guerrero'
-    if (lvl < 75) return 'Héroe'
-    if (lvl < 100) return 'Maestro'
-    return 'Leyenda'
-  }
+/* ── DATE ────────────────────────────────────────────────── */
+const DAYS  = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday']
+const MONTHS= ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
+function fmtDate(){
+  const d=new Date()
+  return `${DAYS[d.getDay()]}, ${MONTHS[d.getMonth()]} ${d.getDate()}`
+}
+document.getElementById('tbDate').textContent = fmtDate()
 
-  const ATTRS = [
-    { key: 'xp_vitalidad',   label: 'Vitalidad',  emoji: '💚', color: 'var(--vitalidad)' },
-    { key: 'xp_fuerza',      label: 'Fuerza',     emoji: '🔴', color: 'var(--fuerza)'    },
-    { key: 'xp_riqueza',     label: 'Riqueza',    emoji: '💰', color: 'var(--riqueza)'   },
-    { key: 'xp_mente',       label: 'Mente',      emoji: '🔵', color: 'var(--mente)'     },
-    { key: 'xp_disciplina',  label: 'Disciplina', emoji: '💜', color: 'var(--disciplina)' },
-  ]
+/* ── DATA CONFIG ─────────────────────────────────────────── */
+const ATTRS = [
+  {key:'xp_fuerza',    label:'Strength',  sub:'Lifting · athletics',         ico:'💪', c:'var(--str)'},
+  {key:'xp_vitalidad', label:'Vitality',  sub:'Sleep · nutrition · recovery', ico:'💚', c:'var(--vit)'},
+  {key:'xp_riqueza',   label:'Wealth',    sub:'Budget · savings · investing', ico:'💰', c:'var(--wlt)'},
+  {key:'xp_mente',     label:'Intellect', sub:'Reading · study · focus',      ico:'📘', c:'var(--int)'},
+  {key:'xp_disciplina',label:'Spirit',    sub:'Habits · consistency',         ico:'✨', c:'var(--spr)'},
+]
+const ICONS = {
+  meal:   {e:'🍽️',bg:'rgba(78,209,161,.08)'},
+  expense:{e:'💸',bg:'rgba(255,92,122,.08)'},
+  income: {e:'💰',bg:'rgba(255,194,71,.08)'},
+  workout:{e:'🏋️',bg:'rgba(255,92,122,.06)'},
+  habit:  {e:'✅',bg:'rgba(138,108,255,.08)'},
+  journal:{e:'📓',bg:'rgba(79,182,255,.06)'},
+  sleep:  {e:'🌙',bg:'rgba(179,136,255,.06)'},
+  task:   {e:'🎯',bg:'rgba(255,194,71,.06)'},
+  unknown:{e:'❓',bg:'rgba(255,255,255,.04)'},
+}
 
-  const ENTRY_ICONS = {
-    meal:    { emoji: '🍽️', bg: '#14532d' },
-    expense: { emoji: '💸', bg: '#451a03' },
-    income:  { emoji: '💰', bg: '#422006' },
-    workout: { emoji: '🏋️', bg: '#450a0a' },
-    habit:   { emoji: '✅', bg: '#1e1b4b' },
-    journal: { emoji: '📓', bg: '#0c1445' },
-    sleep:   { emoji: '🌙', bg: '#0a0a2e' },
-    unknown: { emoji: '❓', bg: '#1a1a2e' },
-  }
+/* ── RENDERS ─────────────────────────────────────────────── */
+function renderChar(d) {
+  const p   = lvProg(d.total_xp || 0)
+  const lv  = d.level || p.l
+  const ini = (d.name||'A').charAt(0).toUpperCase()
+  const ttl = titleFor(lv)
 
-  // ── Fetch helpers ──
-  async function supabase(path) {
-    const r = await fetch(`${SUPABASE_URL}/rest/v1/${path}`, { headers: HEADERS })
-    return r.json()
-  }
+  document.getElementById('charAv').textContent = ini
+  document.getElementById('charName').innerHTML = `${d.name||'—'} <span style="color:var(--fg3);font-weight:500">the ${ttl}</span>`
+  document.getElementById('charName').style.cssText = ''
+  document.getElementById('charBadges').innerHTML = `
+    <span class="cb cb-class">Spirit Mage</span>
+    <span class="cb cb-streak">🔥 ${d.current_streak||0}-Day Streak</span>
+    <span class="cb cb-active">Active</span>`
+  document.getElementById('xpFill').style.width = p.pct + '%'
+  document.getElementById('xpTxt').textContent  = `XP ${p.cur} / ${p.need} → Lv ${lv+1}`
+  document.getElementById('lvNum').textContent  = lv
+  document.getElementById('spNum').textContent  = d.current_streak || 0
 
-  function todayStr() {
-    return new Date().toISOString().split('T')[0] // YYYY-MM-DD en UTC (igual que Supabase)
-  }
+  // sidebar
+  document.getElementById('sAv').textContent    = ini
+  document.getElementById('sName').textContent  = d.name || '—'
+  document.getElementById('sMeta').textContent  = `Lv ${lv} · ${ttl}`
+  document.getElementById('tbName').textContent = `Welcome back, ${(d.name||'').split(' ')[0]}`
+}
 
-  // ── Render character card ──
-  function renderCharacter(d) {
-    const prog = levelProgress(d.total_xp)
-    document.getElementById('characterCard').innerHTML = `
-      <div class="avatar">⚔️</div>
-      <div class="char-info">
-        <div class="char-name">${d.name}</div>
-        <div class="char-title">${titleForLevel(d.level)}</div>
-        <div class="xp-bar-wrap">
-          <div class="xp-bar-bg">
-            <div class="xp-bar-fill" style="width:${prog.pct}%"></div>
-          </div>
-          <span class="xp-label">${prog.cur}/${prog.needed} XP</span>
+function renderTiles(d) {
+  const wd = d.workout_today
+  document.getElementById('tiles').innerHTML = `
+    <div class="tile">
+      <div class="tile-top"><span class="tile-lbl">XP Hoy</span><div class="tile-ico" style="background:rgba(255,194,71,.12)">⚡</div></div>
+      <div class="tile-val" style="color:var(--gold)">+${d.xp_today||0}</div>
+      <div class="tile-sub">puntos ganados</div>
+    </div>
+    <div class="tile">
+      <div class="tile-top"><span class="tile-lbl">Comidas</span><div class="tile-ico" style="background:rgba(78,209,161,.12)">🍽️</div></div>
+      <div class="tile-val">${d.meals_today||0}</div>
+      <div class="tile-sub">registradas hoy</div>
+    </div>
+    <div class="tile">
+      <div class="tile-top"><span class="tile-lbl">Hábitos</span><div class="tile-ico" style="background:rgba(138,108,255,.12)">✅</div></div>
+      <div class="tile-val">${d.habits_completed_today||0}<span style="font-size:15px;color:var(--fg3)">/${d.habits_total_today||0}</span></div>
+      <div class="tile-sub">completados hoy</div>
+    </div>
+    <div class="tile">
+      <div class="tile-top"><span class="tile-lbl">Gym</span><div class="tile-ico" style="background:rgba(255,92,122,.12)">🏋️</div></div>
+      <div class="tile-val" style="color:${wd?'var(--ok)':'var(--fg4)'}">${wd?'✓':'—'}</div>
+      <div class="tile-sub">${wd?'entrenamiento hecho':'sin entrenar aún'}</div>
+    </div>`
+}
+
+function renderAttrs(d) {
+  document.getElementById('attrsCard').innerHTML = ATTRS.map(a => {
+    const p = lvProg(d[a.key]||0)
+    const xpNext = xpForLv(p.l+1)
+    return `<div class="attr-row">
+      <div class="attr-ico" style="background:${a.c}18;border:1px solid ${a.c}28">${a.ico}</div>
+      <div class="attr-body">
+        <div class="attr-name">${a.label}</div>
+        <div class="attr-sub">${a.sub}</div>
+        <div class="attr-xp-row">
+          <div class="attr-bar"><div class="attr-fill" style="width:${p.pct}%;background:${a.c}"></div></div>
+          <span class="attr-txt">${d[a.key]||0} / ${xpNext} xp</span>
         </div>
       </div>
-      <div class="char-stats-right">
-        <div class="level-badge">${d.level}</div>
-        <div class="level-label">Nivel</div>
-        <div class="streak-badge">🔥 ${d.current_streak} días</div>
-      </div>
-    `
-  }
+      <div class="attr-lv" style="color:${a.c}">Lv${p.l}<span>level</span></div>
+    </div>`
+  }).join('')
+}
 
-  // ── Render today stats ──
-  function renderToday(d) {
-    document.getElementById('todayGrid').innerHTML = `
-      <div class="stat-chip">
-        <div class="value" style="color:var(--gold)">${d.xp_today ?? 0}</div>
-        <div class="label">XP hoy</div>
-      </div>
-      <div class="stat-chip">
-        <div class="value">${d.meals_today ?? 0}</div>
-        <div class="label">Comidas</div>
-      </div>
-      <div class="stat-chip">
-        <div class="value">${d.habits_completed_today ?? 0}/${d.habits_total_today ?? 0}</div>
-        <div class="label">Hábitos</div>
-      </div>
-      <div class="stat-chip">
-        <div class="value">${d.workout_today ? '✅' : '—'}</div>
-        <div class="label">Gym</div>
-      </div>
-    `
-  }
-
-  // ── Render attributes ──
-  function renderAttrs(d) {
-    document.getElementById('attrsGrid').innerHTML = ATTRS.map(a => {
-      const prog = levelProgress(d[a.key] ?? 0)
-      return `
-        <div class="attr-card">
-          <div class="attr-header">
-            <span class="attr-name">${a.emoji} ${a.label}</span>
-            <span class="attr-level" style="color:${a.color}">Nv ${prog.lvl}</span>
-          </div>
-          <div class="attr-bar-bg">
-            <div class="attr-bar-fill" style="width:${prog.pct}%;background:${a.color}"></div>
-          </div>
-          <div class="attr-xp">${d[a.key] ?? 0} XP total · ${prog.cur}/${prog.needed} para siguiente nivel</div>
+function renderFinance(entries) {
+  if (!entries.length) { document.getElementById('finWrap').style.display='none'; return }
+  let income=0, expenses=0
+  const cats={}
+  entries.forEach(e => {
+    const amt = e.parsed_data?.amount || e.parsed_data?.total || 0
+    if (e.type==='income') income+=amt
+    else { expenses+=amt; const c=e.parsed_data?.category||'Otro'; cats[c]=(cats[c]||0)+amt }
+  })
+  const net=income-expenses, pct=income>0?Math.round((net/income)*100):0
+  document.getElementById('finWrap').style.display='block'
+  document.getElementById('finGrid').innerHTML = `
+    <div class="fin-card">
+      <div class="fin-ico" style="background:rgba(78,209,161,.1)">⬇️</div>
+      <div class="fin-eye">Income</div>
+      <div class="fin-val" style="color:var(--ok)">$${income.toLocaleString()}</div>
+      <div class="fin-trend up">este mes</div>
+    </div>
+    <div class="fin-card">
+      <div class="fin-ico" style="background:rgba(255,92,122,.1)">⬆️</div>
+      <div class="fin-eye">Expenses</div>
+      <div class="fin-val" style="color:var(--bad)">$${expenses.toLocaleString()}</div>
+      <div class="fin-trend dn">este mes</div>
+    </div>
+    <div class="fin-card net">
+      <div>
+        <div class="fin-eye">Net this month</div>
+        <div class="fin-val" style="color:${net>=0?'var(--ok)':'var(--bad)'}">
+          ${net>=0?'+':''}$${Math.abs(net).toLocaleString()}
         </div>
-      `
-    }).join('')
-  }
+      </div>
+      ${income>0?`<div style="font-size:12px;color:var(--fg3)">${pct}% of income saved</div>`:''}
+    </div>`
+}
 
-  // ── Render nutrition ──
-  function renderNutrition(entries) {
-    const meals = entries.filter(e => e.type === 'meal')
-    if (!meals.length) return
+function renderFeed(entries) {
+  if (!entries.length) { document.getElementById('feedWrap').innerHTML='<div class="empty">Sin actividad registrada hoy.</div>'; return }
+  document.getElementById('feedWrap').innerHTML = entries.map(e => {
+    const ic  = ICONS[e.type]||ICONS.unknown
+    const xpT = e.xp_awarded ? Object.values(e.xp_awarded).reduce((a,b)=>a+b,0) : 0
+    const t   = new Date(e.created_at).toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})
+    return `<div class="ei">
+      <div class="ei-ico" style="background:${ic.bg}">${ic.e}</div>
+      <div class="ei-body">
+        <div class="ei-sum">${e.summary||e.raw_input||'—'}</div>
+        <div class="ei-time">${t}</div>
+      </div>
+      ${xpT>0?`<div class="ei-xp">+${xpT} XP</div>`:''}
+    </div>`
+  }).join('')
+}
 
-    let cal = 0, prot = 0, carbs = 0, fat = 0
-    meals.forEach(m => {
-      const macros = m.parsed_data?.estimated_macros
-      if (macros) {
-        cal   += macros.calories   ?? 0
-        prot  += macros.protein_g  ?? 0
-        carbs += macros.carbs_g    ?? 0
-        fat   += macros.fat_g      ?? 0
-      }
+/* ── GTD ─────────────────────────────────────────────────── */
+let allTasks = [], activeCtx = 'all'
+
+function renderTasks(tasks) {
+  const show   = activeCtx==='all' ? tasks : tasks.filter(t=>t.context===activeCtx)
+  const inbox  = tasks.filter(t=>t.status==='inbox').length
+  document.getElementById('tCount').textContent      = tasks.length
+  document.getElementById('inboxBadge').textContent  = inbox
+
+  if (!show.length) { document.getElementById('tasksWrap').innerHTML='<div class="empty">Sin tareas pendientes 🎯</div>'; return }
+  document.getElementById('tasksWrap').innerHTML = show.slice(0,10).map(t=>`
+    <div class="ti p${t.priority}" onclick="doneTask('${t.id}','${(t.title||'').replace(/'/g,"\\'").replace(/"/g,'&quot;')}')">
+      <div class="t-chk"></div>
+      <div class="t-body">
+        <div class="t-title">${t.title||'—'}</div>
+        <div class="t-meta">
+          <span class="t-ctx">${t.context||'@inbox'}</span>
+          ${t.project?`<span class="t-proj">/ ${t.project}</span>`:''}
+          <span class="t-xp">+${t.xp_reward||10} XP</span>
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+async function doneTask(id, title) {
+  if (!confirm(`¿Completar: "${title}"?`)) return
+  try {
+    await fetch(`${BASE}/rest/v1/rpc/complete_task`, {
+      method:'POST', headers:{...HDR,'Content-Type':'application/json'},
+      body: JSON.stringify({p_task_id:id})
     })
+    await loadAll()
+  } catch(err){ console.error(err) }
+}
 
-    document.getElementById('nutritionTitle').style.display = 'block'
-    document.getElementById('nutritionGrid').style.display  = 'grid'
-    document.getElementById('nutritionGrid').innerHTML = `
-      <div class="macro-chip">
-        <div class="macro-value" style="color:var(--gold)">${Math.round(cal)}</div>
-        <div class="macro-label">Calorías</div>
-      </div>
-      <div class="macro-chip">
-        <div class="macro-value" style="color:var(--vitalidad)">${Math.round(prot)}g</div>
-        <div class="macro-label">Proteína</div>
-      </div>
-      <div class="macro-chip">
-        <div class="macro-value" style="color:var(--mente)">${Math.round(carbs)}g</div>
-        <div class="macro-label">Carbs</div>
-      </div>
-      <div class="macro-chip">
-        <div class="macro-value" style="color:var(--riqueza)">${Math.round(fat)}g</div>
-        <div class="macro-label">Grasa</div>
-      </div>
-    `
-  }
+document.getElementById('ctxBtns').addEventListener('click', e => {
+  const b = e.target.closest('.ctx-btn')
+  if (!b) return
+  document.querySelectorAll('.ctx-btn').forEach(x=>x.classList.remove('on'))
+  b.classList.add('on')
+  activeCtx = b.dataset.ctx
+  renderTasks(allTasks)
+})
 
-  // ── Render feed ──
-  function renderFeed(entries) {
-    if (!entries.length) {
-      document.getElementById('feedSection').innerHTML = '<div class="empty">Sin actividad registrada hoy.</div>'
-      return
-    }
-    document.getElementById('feedSection').innerHTML = entries.map(e => {
-      const icon = ENTRY_ICONS[e.type] ?? ENTRY_ICONS.unknown
-      const xp   = e.xp_awarded
-      const xpTotal = xp ? Object.values(xp).reduce((a,b) => a + b, 0) : 0
-      const time = new Date(e.created_at).toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
-      return `
-        <div class="entry-item">
-          <div class="entry-icon" style="background:${icon.bg}">${icon.emoji}</div>
-          <div class="entry-body">
-            <div class="entry-summary">${e.summary ?? e.raw_input ?? '—'}</div>
-            <div class="entry-time">${time}</div>
-          </div>
-          ${xpTotal > 0 ? `<div class="entry-xp">+${xpTotal} XP</div>` : ''}
-        </div>
-      `
-    }).join('')
-  }
+/* ── LOAD ────────────────────────────────────────────────── */
+async function loadAll() {
+  try {
+    const today = utcToday()
+    const m0    = firstOfMonth()
+    const [dash, entries, finance, tasks] = await Promise.all([
+      db('dashboard_today?limit=1'),
+      db(`entries?entry_date=eq.${today}&order=created_at.desc&limit=30`),
+      db(`entries?entry_date=gte.${m0}&type=in.("expense","income")&select=type,parsed_data`),
+      db(`tasks?status=in.("inbox","next","waiting")&order=priority.asc,created_at.asc&limit=50`),
+    ])
+    const d = Array.isArray(dash) ? dash[0] : dash
+    if (d) { renderChar(d); renderTiles(d); renderAttrs(d) }
+    if (Array.isArray(entries))  renderFeed(entries)
+    if (Array.isArray(finance))  renderFinance(finance)
+    allTasks = Array.isArray(tasks) ? tasks : []
+    renderTasks(allTasks)
+    document.getElementById('updAt').textContent =
+      new Date().toLocaleTimeString('es',{hour:'2-digit',minute:'2-digit'})
+  } catch(err){ console.error('loadAll:', err) }
+}
 
-  // ── Main load ──
-  async function loadDashboard() {
-    try {
-      const [dashData, entries] = await Promise.all([
-        supabase('dashboard_today?limit=1'),
-        supabase(`entries?entry_date=eq.${todayStr()}&order=created_at.desc&limit=20`),
-      ])
-
-      const d = Array.isArray(dashData) ? dashData[0] : dashData
-      if (d) {
-        renderCharacter(d)
-        renderToday(d)
-        renderAttrs(d)
-      }
-
-      if (Array.isArray(entries)) {
-        renderNutrition(entries)
-        renderFeed(entries)
-      }
-
-      document.getElementById('lastUpdated').textContent =
-        'Actualizado: ' + new Date().toLocaleTimeString('es', { hour: '2-digit', minute: '2-digit' })
-
-    } catch (err) {
-      console.error(err)
-    }
-  }
-
-  loadDashboard()
-  setInterval(loadDashboard, 60000) // refresca cada 60 segundos
+loadAll()
+setInterval(loadAll, 60000)
 </script>
 </body>
 </html>
