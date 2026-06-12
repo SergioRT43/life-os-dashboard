@@ -265,6 +265,74 @@
     .done-title { flex: 1; font-size: 12px; color: var(--fg-secondary); text-decoration: line-through; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .done-xp { font-family: var(--font-mono); font-size: 11px; color: var(--accent-gold); }
 
+    .t-btn.edit:hover { background: rgba(138,108,255,0.12); color: var(--accent-violet); border-color: rgba(138,108,255,0.35); }
+
+    /* ─── AGENDA ───────────────────────────────────────────────── */
+    .ag-group { padding: 0; }
+    .ag-head {
+      padding: 8px 20px 5px; font-size: 10px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.09em; font-family: var(--font-mono);
+      border-bottom: 1px solid var(--border);
+    }
+    .ag-head.overdue { color: var(--attr-strength); background: rgba(255,92,122,0.06); }
+    .ag-head.today   { color: var(--accent-gold);   background: rgba(245,200,66,0.06); }
+    .ag-head.week    { color: var(--fg-tertiary); }
+    .ag-row {
+      display: grid; grid-template-columns: 1fr auto; gap: 8px;
+      align-items: center; padding: 8px 20px;
+      border-bottom: 1px solid var(--border); cursor: pointer;
+      transition: background 0.14s;
+    }
+    .ag-row:last-child { border-bottom: none; }
+    .ag-row:hover { background: var(--bg-hover); }
+    .ag-title { font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ag-meta { display: flex; gap: 6px; align-items: center; margin-top: 1px; }
+    .ag-ctx { font-size: 9px; color: var(--accent-violet); font-family: var(--font-mono); }
+    .ag-proj { font-size: 9px; color: var(--accent-gold); font-family: var(--font-mono); }
+    .ag-date { font-family: var(--font-mono); font-size: 11px; color: var(--fg-tertiary); white-space: nowrap; }
+    .ag-date.overdue { color: var(--attr-strength); }
+    .ag-date.today { color: var(--accent-gold); }
+
+    /* ─── EDIT MODAL ───────────────────────────────────────────── */
+    .modal-bg {
+      position: fixed; inset: 0; background: rgba(4,6,12,0.7);
+      backdrop-filter: blur(3px); z-index: 900;
+      display: none; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-bg.show { display: flex; }
+    .modal {
+      width: 100%; max-width: 440px;
+      background: var(--bg-card); border: 1px solid var(--border-strong);
+      border-radius: var(--r-xl); overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.6);
+    }
+    .modal-hd {
+      padding: 16px 20px; border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .modal-title { font-family: var(--font-display); font-size: 14px; font-weight: 700; }
+    .modal-x { background: none; border: none; color: var(--fg-tertiary); font-size: 18px; cursor: pointer; line-height: 1; }
+    .modal-x:hover { color: var(--fg-primary); }
+    .modal-body { padding: 18px 20px; display: flex; flex-direction: column; gap: 14px; }
+    .fld { display: flex; flex-direction: column; gap: 5px; }
+    .fld label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.07em; color: var(--fg-tertiary); }
+    .fld-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    .fld input, .fld select {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--r-md); padding: 9px 12px; color: var(--fg-primary);
+      font-size: 13px; font-family: var(--font-body); outline: none;
+      transition: border-color 0.14s; width: 100%;
+    }
+    .fld input:focus, .fld select:focus { border-color: var(--accent-violet); }
+    .fld input::placeholder { color: var(--fg-tertiary); }
+    .modal-ft { padding: 14px 20px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; align-items: center; }
+    .modal-del { margin-right: auto; background: none; border: 1px solid rgba(255,92,122,0.3); color: var(--attr-strength); border-radius: var(--r-md); padding: 8px 12px; font-size: 12px; cursor: pointer; font-family: var(--font-body); transition: all 0.14s; }
+    .modal-del:hover { background: rgba(255,92,122,0.12); }
+    .modal-cancel { background: transparent; border: 1px solid var(--border); color: var(--fg-secondary); border-radius: var(--r-md); padding: 9px 16px; font-size: 13px; cursor: pointer; font-family: var(--font-body); }
+    .modal-cancel:hover { color: var(--fg-primary); border-color: var(--border-strong); }
+    .modal-save { background: var(--accent-violet); border: none; color: #fff; border-radius: var(--r-md); padding: 9px 18px; font-size: 13px; font-weight: 600; cursor: pointer; font-family: var(--font-body); }
+    .modal-save:hover { opacity: 0.88; }
+
     /* ─── XP TOAST ─────────────────────────────────────────────── */
     .xp-toast {
       position: fixed; bottom: 24px; right: 24px;
@@ -438,6 +506,15 @@
       <!-- RIGHT COLUMN -->
       <div class="col-right">
 
+        <!-- AGENDA -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-title">📅 Agenda</span>
+            <span class="card-count" id="cnt-agenda">0</span>
+          </div>
+          <div id="agenda-body"><div class="empty">Sin tareas con fecha.</div></div>
+        </div>
+
         <!-- PROJECTS -->
         <div class="card">
           <div class="card-hd">
@@ -489,6 +566,63 @@
     </div>
   </main>
 </div>
+
+<!-- EDIT MODAL -->
+<div class="modal-bg" id="edit-modal">
+  <div class="modal">
+    <div class="modal-hd">
+      <span class="modal-title">✎ Editar tarea</span>
+      <button class="modal-x" onclick="closeEdit()">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="ed-id">
+      <div class="fld">
+        <label>Título</label>
+        <input type="text" id="ed-title" placeholder="Título de la tarea">
+      </div>
+      <div class="fld-row">
+        <div class="fld">
+          <label>Contexto</label>
+          <input type="text" id="ed-context" list="ctx-list" placeholder="@casa">
+        </div>
+        <div class="fld">
+          <label>Proyecto (opcional)</label>
+          <input type="text" id="ed-project" list="proj-list" placeholder="sin proyecto">
+        </div>
+      </div>
+      <div class="fld-row">
+        <div class="fld">
+          <label>Prioridad</label>
+          <select id="ed-priority">
+            <option value="1">🔴 Alta (+20 XP)</option>
+            <option value="2">🟡 Media (+15 XP)</option>
+            <option value="3">🟢 Baja (+10 XP)</option>
+          </select>
+        </div>
+        <div class="fld">
+          <label>Estado</label>
+          <select id="ed-status">
+            <option value="inbox">📥 Inbox</option>
+            <option value="next">⚡ Próximas</option>
+            <option value="waiting">⏳ En espera</option>
+            <option value="someday">💭 Algún día</option>
+          </select>
+        </div>
+      </div>
+      <div class="fld">
+        <label>Fecha límite (vacío = sin fecha)</label>
+        <input type="date" id="ed-due">
+      </div>
+    </div>
+    <div class="modal-ft">
+      <button class="modal-del" onclick="deleteFromModal()">🗑 Eliminar</button>
+      <button class="modal-cancel" onclick="closeEdit()">Cancelar</button>
+      <button class="modal-save" onclick="saveEdit()">Guardar</button>
+    </div>
+  </div>
+</div>
+<datalist id="ctx-list"></datalist>
+<datalist id="proj-list"></datalist>
 
 <!-- XP TOAST -->
 <div class="xp-toast" id="xp-toast">
@@ -608,6 +742,7 @@ function renderInbox(tasks) {
     return
   }
   body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'✎',  cls:'edit', tip:'Editar',                     fn:'openEdit' },
     { ico:'⚡', cls:'next', tip:'Mover a próximas acciones', fn:'toNext' },
     { ico:'⏳', cls:'',     tip:'Mover a en espera',          fn:'toWaiting' },
     { ico:'💭', cls:'',     tip:'Mover a algún día',          fn:'toSomeday' },
@@ -617,6 +752,7 @@ function renderInbox(tasks) {
 }
 
 const NEXT_ACTIONS = [
+  { ico:'✎',  cls:'edit', tip:'Editar',           fn:'openEdit' },
   { ico:'✓',  cls:'done', tip:'Completar (+XP)', fn:'completeTask' },
   { ico:'⏳', cls:'',     tip:'Pasa a en espera', fn:'toWaiting' },
   { ico:'🗑', cls:'del',  tip:'Eliminar',         fn:'removeTask' },
@@ -664,6 +800,7 @@ function renderWaiting(tasks) {
   setText('cnt-waiting', tasks.length); setText('wf-waiting', tasks.length)
   if (!tasks.length) { body.innerHTML = '<div class="empty">Nada en espera.</div>'; return }
   body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'✎',  cls:'edit', tip:'Editar',                fn:'openEdit' },
     { ico:'⚡', cls:'next', tip:'Reactivar → próximas', fn:'toNext' },
     { ico:'✓',  cls:'done', tip:'Completar (+XP)',      fn:'completeTask' },
     { ico:'🗑', cls:'del',  tip:'Eliminar',              fn:'removeTask' },
@@ -675,6 +812,7 @@ function renderSomeday(tasks) {
   setText('cnt-someday', tasks.length); setText('wf-someday', tasks.length)
   if (!tasks.length) { body.innerHTML = '<div class="empty">La incubadora está vacía.</div>'; return }
   body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'✎',  cls:'edit', tip:'Editar',             fn:'openEdit' },
     { ico:'⚡', cls:'next', tip:'Activar → próximas', fn:'toNext' },
     { ico:'🗑', cls:'del',  tip:'Eliminar',            fn:'removeTask' },
   ])).join('') + '</div>'
@@ -807,6 +945,116 @@ function showToast(title, sub) {
   toastTimer = setTimeout(() => t.classList.remove('show'), 3800)
 }
 
+/* ── AGENDA (tareas con fecha: vencidas / hoy / esta semana) ──── */
+function fmtAgendaDate(due, today) {
+  if (due < today) return { label: due.slice(5), cls: 'overdue' }
+  if (due === today) return { label: 'HOY', cls: 'today' }
+  /* día de la semana abreviado */
+  const dow = new Date(due + 'T12:00:00').getDay()
+  const lbl = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'][dow] + ' ' + due.slice(8)
+  return { label: lbl, cls: '' }
+}
+
+function renderAgenda(tasks) {
+  const body = document.getElementById('agenda-body')
+  const today = localToday()
+  const weekEnd = (() => { const d = new Date(); d.setDate(d.getDate() + 7); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}` })()
+
+  const dated = tasks
+    .filter(t => t.due_date && t.due_date <= weekEnd)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date))
+
+  setText('cnt-agenda', dated.length)
+  if (!dated.length) {
+    body.innerHTML = '<div class="empty">Nada con fecha próxima.<br>Usa <b>!hoy</b>, <b>!mañana</b> o <b>!fecha</b> al capturar.</div>'
+    return
+  }
+
+  const overdue = dated.filter(t => t.due_date < today)
+  const todayT  = dated.filter(t => t.due_date === today)
+  const week    = dated.filter(t => t.due_date > today)
+
+  const rowOf = t => {
+    const d = fmtAgendaDate(t.due_date, today)
+    return `
+      <div class="ag-row" onclick="openEdit('${t.id}', this)">
+        <div>
+          <div class="ag-title">${escHtml(t.title)}</div>
+          <div class="ag-meta">
+            <span class="ag-ctx">${escHtml(t.context ?? '@inbox')}</span>
+            ${t.project ? `<span class="ag-proj">+${escHtml(t.project)}</span>` : ''}
+          </div>
+        </div>
+        <span class="ag-date ${d.cls}">${d.label}</span>
+      </div>`
+  }
+
+  let html = ''
+  if (overdue.length) html += `<div class="ag-head overdue">⚠️ Vencidas · ${overdue.length}</div>` + overdue.map(rowOf).join('')
+  if (todayT.length)  html += `<div class="ag-head today">🎯 Hoy · ${todayT.length}</div>` + todayT.map(rowOf).join('')
+  if (week.length)    html += `<div class="ag-head week">📆 Próximos 7 días · ${week.length}</div>` + week.map(rowOf).join('')
+  body.innerHTML = html
+}
+
+/* ── EDIT MODAL ──────────────────────────────────────────────── */
+let ALL_TASKS = []
+
+function refreshDatalists() {
+  const ctxs  = [...new Set(ALL_TASKS.map(t => t.context).filter(Boolean))].sort()
+  const projs = [...new Set(ALL_TASKS.map(t => t.project).filter(Boolean))].sort()
+  document.getElementById('ctx-list').innerHTML  = ctxs.map(c => `<option value="${escHtml(c)}">`).join('')
+  document.getElementById('proj-list').innerHTML = projs.map(p => `<option value="${escHtml(p)}">`).join('')
+}
+
+function openEdit(id) {
+  const t = ALL_TASKS.find(x => x.id === id)
+  if (!t) return
+  document.getElementById('ed-id').value       = t.id
+  document.getElementById('ed-title').value     = t.title ?? ''
+  document.getElementById('ed-context').value   = t.context ?? '@inbox'
+  document.getElementById('ed-project').value   = t.project ?? ''
+  document.getElementById('ed-priority').value  = String(t.priority ?? 2)
+  document.getElementById('ed-status').value    = t.status ?? 'inbox'
+  document.getElementById('ed-due').value       = t.due_date ?? ''
+  document.getElementById('edit-modal').classList.add('show')
+}
+function closeEdit() { document.getElementById('edit-modal').classList.remove('show') }
+
+async function saveEdit() {
+  const id = document.getElementById('ed-id').value
+  let ctx  = document.getElementById('ed-context').value.trim().toLowerCase()
+  if (ctx && !ctx.startsWith('@')) ctx = '@' + ctx
+  const proj = document.getElementById('ed-project').value.trim().toLowerCase() || null
+  const pri  = parseInt(document.getElementById('ed-priority').value)
+  const patch = {
+    title:    document.getElementById('ed-title').value.trim(),
+    context:  ctx || '@inbox',
+    project:  proj,
+    priority: pri,
+    status:   document.getElementById('ed-status').value,
+    due_date: document.getElementById('ed-due').value || null,
+    xp_reward: 10 + (pri === 1 ? 10 : pri === 2 ? 5 : 0),
+    updated_at: new Date().toISOString(),
+  }
+  if (!patch.title) { showToast('❌ Título vacío', 'La tarea necesita un título'); return }
+  const ok = await dbPatch('tasks', `id=eq.${id}`, patch)
+  closeEdit()
+  if (ok) { showToast('✏️ Tarea actualizada', escHtml(patch.title)); await loadAll() }
+  else showToast('❌ Error', 'No se pudo guardar')
+}
+
+async function deleteFromModal() {
+  const id = document.getElementById('ed-id').value
+  if (!confirm('¿Eliminar esta tarea definitivamente?')) return
+  closeEdit()
+  await dbDelete('tasks', `id=eq.${id}`)
+  await loadAll()
+}
+
+/* cerrar modal al hacer clic fuera o con Escape */
+document.getElementById('edit-modal').addEventListener('click', e => { if (e.target.id === 'edit-modal') closeEdit() })
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeEdit() })
+
 /* ── LOAD ────────────────────────────────────────────────────── */
 async function loadAll() {
   const today = localToday()
@@ -816,12 +1064,16 @@ async function loadAll() {
     db('dashboard_today?limit=1'),
   ])
 
+  ALL_TASKS = tasks
+  refreshDatalists()
+
   const by = s => tasks.filter(t => t.status === s)
   renderInbox(by('inbox'))
   renderNext(by('next'))
   renderWaiting(by('waiting'))
   renderSomeday(by('someday'))
   renderProjects(tasks)
+  renderAgenda(tasks)
   renderDone(doneToday)
 
   const actionable = by('inbox').length + by('next').length + by('waiting').length
