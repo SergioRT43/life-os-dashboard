@@ -209,6 +209,18 @@
     }
     .ctx-head.proj { color: var(--accent-gold); }
 
+    /* context filter chips */
+    .ctx-filter { display: flex; gap: 6px; flex-wrap: wrap; padding: 12px 20px; border-bottom: 1px solid var(--border); }
+    .ctx-chip {
+      padding: 4px 11px; border-radius: 20px; font-size: 11px;
+      font-family: var(--font-mono); cursor: pointer;
+      border: 1px solid var(--border); background: var(--bg-elevated);
+      color: var(--fg-secondary); transition: all 0.14s; user-select: none;
+    }
+    .ctx-chip:hover { color: var(--fg-primary); border-color: var(--border-strong); }
+    .ctx-chip.active { background: var(--accent-violet-dim); border-color: rgba(138,108,255,0.4); color: var(--accent-violet); }
+    .ctx-chip .c { opacity: 0.55; margin-left: 5px; }
+
     /* divider bands inside Next: sueltas vs proyectos */
     .nx-band {
       padding: 8px 20px;
@@ -480,6 +492,7 @@
             <span class="card-title">⚡ Próximas acciones</span>
             <span class="card-count" id="cnt-next">0</span>
           </div>
+          <div class="ctx-filter" id="ctx-filter" style="display:none"></div>
           <div id="next-body"><div class="empty">Cargando…</div></div>
         </div>
 
@@ -758,13 +771,43 @@ const NEXT_ACTIONS = [
   { ico:'🗑', cls:'del',  tip:'Eliminar',         fn:'removeTask' },
 ]
 
-function renderNext(tasks) {
-  const body = document.getElementById('next-body')
-  setText('cnt-next', tasks.length); setText('wf-next', tasks.length)
-  if (!tasks.length) { body.innerHTML = '<div class="empty">Sin próximas acciones. Procesa tu inbox con ⚡.</div>'; return }
+let nextFilter = 'all'
+let NEXT_TASKS = []
+function setNextFilter(ctx) { nextFilter = ctx; renderNext(NEXT_TASKS) }
 
-  const loose    = tasks.filter(t => !t.project)
-  const projects = tasks.filter(t => t.project)
+function renderNext(tasks) {
+  NEXT_TASKS = tasks
+  const body = document.getElementById('next-body')
+  const filterBar = document.getElementById('ctx-filter')
+  setText('cnt-next', tasks.length); setText('wf-next', tasks.length)
+
+  if (!tasks.length) {
+    filterBar.style.display = 'none'
+    body.innerHTML = '<div class="empty">Sin próximas acciones. Procesa tu inbox con ⚡.</div>'
+    return
+  }
+
+  /* ── chips de filtro por contexto (paso 2 del flujo GTD de Allen) ── */
+  const ctxCounts = {}
+  tasks.forEach(t => { const c = t.context ?? '@inbox'; ctxCounts[c] = (ctxCounts[c] || 0) + 1 })
+  const ctxs = Object.keys(ctxCounts).sort()
+  if (nextFilter !== 'all' && !ctxCounts[nextFilter]) nextFilter = 'all'  /* el contexto desapareció */
+
+  if (ctxs.length > 1) {
+    filterBar.style.display = 'flex'
+    filterBar.innerHTML =
+      `<span class="ctx-chip ${nextFilter === 'all' ? 'active' : ''}" onclick="setNextFilter('all')">Todos<span class="c">${tasks.length}</span></span>` +
+      ctxs.map(c => `<span class="ctx-chip ${nextFilter === c ? 'active' : ''}" onclick="setNextFilter('${escHtml(c)}')">${escHtml(c)}<span class="c">${ctxCounts[c]}</span></span>`).join('')
+  } else {
+    filterBar.style.display = 'none'
+  }
+
+  /* aplicar filtro */
+  const view = nextFilter === 'all' ? tasks : tasks.filter(t => (t.context ?? '@inbox') === nextFilter)
+  if (!view.length) { body.innerHTML = `<div class="empty">Sin acciones en <b>${escHtml(nextFilter)}</b>.</div>`; return }
+
+  const loose    = view.filter(t => !t.project)
+  const projects = view.filter(t => t.project)
   let html = ''
 
   /* ── BLOQUE 1: acciones sueltas, agrupadas por contexto ── */
