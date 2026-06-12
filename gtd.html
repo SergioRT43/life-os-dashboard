@@ -207,6 +207,19 @@
       border-bottom: 1px solid var(--border);
       background: rgba(255,255,255,0.015);
     }
+    .ctx-head.proj { color: var(--accent-gold); }
+
+    /* divider bands inside Next: sueltas vs proyectos */
+    .nx-band {
+      padding: 8px 20px;
+      font-size: 9px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.14em; font-family: var(--font-mono);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .nx-band.loose { color: var(--accent-violet); background: linear-gradient(90deg, rgba(138,108,255,0.10), transparent 60%); }
+    .nx-band.projects { color: var(--accent-gold); background: linear-gradient(90deg, rgba(245,200,66,0.09), transparent 60%); }
+    .nx-band .n { margin-left: auto; opacity: 0.7; }
 
     .empty { padding: 26px 20px; text-align: center; color: var(--fg-tertiary); font-size: 13px; line-height: 1.7; }
     .inbox-zero {
@@ -603,25 +616,46 @@ function renderInbox(tasks) {
   ])).join('') + '</div>'
 }
 
+const NEXT_ACTIONS = [
+  { ico:'✓',  cls:'done', tip:'Completar (+XP)', fn:'completeTask' },
+  { ico:'⏳', cls:'',     tip:'Pasa a en espera', fn:'toWaiting' },
+  { ico:'🗑', cls:'del',  tip:'Eliminar',         fn:'removeTask' },
+]
+
 function renderNext(tasks) {
   const body = document.getElementById('next-body')
   setText('cnt-next', tasks.length); setText('wf-next', tasks.length)
   if (!tasks.length) { body.innerHTML = '<div class="empty">Sin próximas acciones. Procesa tu inbox con ⚡.</div>'; return }
 
-  /* agrupar por contexto */
-  const groups = {}
-  tasks.forEach(t => { const c = t.context ?? '@inbox'; (groups[c] ??= []).push(t) })
-
+  const loose    = tasks.filter(t => !t.project)
+  const projects = tasks.filter(t => t.project)
   let html = ''
-  Object.keys(groups).sort().forEach(ctx => {
-    html += `<div class="ctx-head">${escHtml(ctx)} · ${groups[ctx].length}</div><div class="t-list">`
-    html += groups[ctx].map(t => taskRow(t, [
-      { ico:'✓',  cls:'done', tip:'Completar (+XP)', fn:'completeTask' },
-      { ico:'⏳', cls:'',     tip:'Pasa a en espera', fn:'toWaiting' },
-      { ico:'🗑', cls:'del',  tip:'Eliminar',         fn:'removeTask' },
-    ])).join('')
-    html += '</div>'
-  })
+
+  /* ── BLOQUE 1: acciones sueltas, agrupadas por contexto ── */
+  if (loose.length) {
+    html += `<div class="nx-band loose">⚡ Acciones sueltas<span class="n">${loose.length}</span></div>`
+    const byCtx = {}
+    loose.forEach(t => { const c = t.context ?? '@inbox'; (byCtx[c] ??= []).push(t) })
+    Object.keys(byCtx).sort().forEach(ctx => {
+      html += `<div class="ctx-head">${escHtml(ctx)} · ${byCtx[ctx].length}</div><div class="t-list">`
+      html += byCtx[ctx].map(t => taskRow(t, NEXT_ACTIONS)).join('')
+      html += '</div>'
+    })
+  }
+
+  /* ── BLOQUE 2: acciones de proyectos, agrupadas por proyecto ── */
+  if (projects.length) {
+    const projNames = [...new Set(projects.map(t => t.project))].sort()
+    html += `<div class="nx-band projects">📁 Por proyecto<span class="n">${projects.length}</span></div>`
+    projNames.forEach(name => {
+      const list = projects.filter(t => t.project === name)
+        .sort((a, b) => a.priority - b.priority)
+      html += `<div class="ctx-head proj">+${escHtml(name)} · ${list.length}</div><div class="t-list">`
+      html += list.map(t => taskRow(t, NEXT_ACTIONS)).join('')
+      html += '</div>'
+    })
+  }
+
   body.innerHTML = html
 }
 
