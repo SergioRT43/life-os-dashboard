@@ -1,0 +1,5 @@
+# Credenciales y documentación interna — NUNCA subir
+recursos/
+memory.md
+CLAUDE.md
+.claude/

@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life OS — Entrenamiento</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS (idénticos a index.html) ───────────────── */
+    :root {
+      --bg-base:#080B14; --bg-card:#0D1121; --bg-elevated:#121729; --bg-hover:rgba(255,255,255,0.035);
+      --fg-primary:#E8EAF6; --fg-secondary:#8892A4; --fg-tertiary:#4E5568;
+      --accent-violet:#8A6CFF; --accent-violet-dim:rgba(138,108,255,0.15);
+      --accent-gold:#F5C842; --accent-cyan:#40E0D0;
+      --attr-vitality:#FF8A4C; --attr-strength:#FF5C7A; --attr-agility:#5FD68B;
+      --attr-intellect:#4FB6FF; --attr-spirit:#B388FF;
+      --font-display:"Space Grotesk",system-ui,sans-serif;
+      --font-body:"Manrope",system-ui,sans-serif;
+      --font-mono:"JetBrains Mono",ui-monospace,monospace;
+      --border:rgba(255,255,255,0.07); --border-strong:rgba(255,255,255,0.13);
+      --r-md:10px;
+    }
+    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
+    html,body { height:100%; }
+    body {
+      font-family:var(--font-body); background:var(--bg-base); color:var(--fg-primary);
+      font-size:14px; line-height:1.5; -webkit-font-smoothing:antialiased;
+      overflow:hidden;
+    }
+
+    .app { display:grid; grid-template-columns:240px 1fr; height:100vh; }
+
+    /* ─── SIDEBAR ──────────────────────────────────────────────── */
+    .sidebar {
+      width:240px; background:rgba(11,13,23,0.72);
+      backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px);
+      border-right:1px solid var(--border);
+      display:flex; flex-direction:column; height:100vh; overflow-y:auto;
+    }
+    .sb-logo { padding:18px 20px 16px; display:flex; align-items:center; gap:10px; border-bottom:1px solid var(--border); }
+    .sb-logo-icon { width:34px; height:34px; border-radius:9px; background:linear-gradient(135deg,var(--accent-violet),#5c3ecc); display:flex; align-items:center; justify-content:center; font-size:17px; flex-shrink:0; }
+    .sb-logo-name { font-family:var(--font-display); font-size:15px; font-weight:700; color:var(--fg-primary); }
+    .sb-logo-ver { font-size:10px; color:var(--fg-tertiary); font-family:var(--font-mono); }
+    .sb-nav { padding:10px 0; flex:1; }
+    .sb-sec-label { font-size:10px; font-weight:700; text-transform:uppercase; letter-spacing:0.1em; color:var(--fg-tertiary); padding:8px 18px 4px; }
+    .nav-item {
+      display:flex; align-items:center; gap:10px; padding:9px 16px; margin:1px 8px;
+      border-radius:var(--r-md); border-left:2px solid transparent; cursor:pointer;
+      text-decoration:none; color:var(--fg-secondary); font-size:13px; font-weight:500;
+      transition:background 0.14s,color 0.14s;
+    }
+    .nav-item:hover { background:var(--bg-hover); color:var(--fg-primary); }
+    .nav-item.active {
+      background:linear-gradient(90deg,rgba(138,108,255,0.133),transparent);
+      border-left:2px solid var(--accent-violet); color:var(--fg-primary);
+    }
+    .nav-icon { font-size:15px; width:20px; text-align:center; flex-shrink:0; }
+    .nav-badge { margin-left:auto; background:var(--accent-violet-dim); color:var(--accent-violet); font-size:10px; font-weight:700; padding:2px 7px; border-radius:20px; font-family:var(--font-mono); }
+    .sb-char { padding:14px 16px; border-top:1px solid var(--border); display:flex; align-items:center; gap:10px; }
+    .sb-char-avatar { width:36px; height:36px; border-radius:9px; background:linear-gradient(135deg,#1d1060,#0d1a40); display:flex; align-items:center; justify-content:center; font-size:18px; border:1px solid var(--border-strong); flex-shrink:0; }
+    .sb-char-name { font-size:13px; font-weight:600; color:var(--fg-primary); }
+    .sb-char-level { font-size:11px; color:var(--fg-tertiary); font-family:var(--font-mono); }
+
+    /* ─── MAIN + TOPBAR + IFRAME ───────────────────────────────── */
+    .main { display:flex; flex-direction:column; height:100vh; min-width:0; }
+    .topbar {
+      display:flex; align-items:center; justify-content:space-between;
+      padding:0 28px; height:60px; flex-shrink:0;
+      border-bottom:1px solid var(--border); background:rgba(8,11,20,0.85);
+      backdrop-filter:blur(8px);
+    }
+    .tb-greeting { font-family:var(--font-display); font-size:15px; font-weight:600; }
+    .tb-sub { font-size:12px; color:var(--fg-secondary); font-family:var(--font-mono); }
+    .tb-right { display:flex; align-items:center; gap:10px; }
+    .tb-chip { display:flex; align-items:center; gap:6px; padding:5px 12px; background:var(--bg-elevated); border:1px solid var(--border); border-radius:20px; font-size:12px; font-family:var(--font-mono); color:var(--fg-secondary); }
+    .tb-chip .dot { width:6px; height:6px; border-radius:50%; background:var(--accent-cyan); animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .btn-open {
+      display:flex; align-items:center; gap:6px; padding:6px 14px;
+      background:var(--bg-elevated); border:1px solid var(--border); border-radius:var(--r-md);
+      color:var(--fg-secondary); font-size:12px; font-family:var(--font-body);
+      cursor:pointer; text-decoration:none; transition:all 0.14s;
+    }
+    .btn-open:hover { background:var(--bg-hover); color:var(--fg-primary); border-color:var(--border-strong); }
+
+    .frame-wrap { flex:1; min-height:0; position:relative; }
+    iframe.embed { width:100%; height:100%; border:0; display:block; background:var(--bg-base); }
+
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:transparent; }
+    ::-webkit-scrollbar-thumb { background:var(--border-strong); border-radius:3px; }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">⚔️</div>
+      <div>
+        <div class="sb-logo-name">Life OS</div>
+        <div class="sb-logo-ver">v2.0 · AETHER</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-sec-label">Principal</div>
+      <a href="index.html" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        Dashboard
+      </a>
+      <a href="gtd.html" class="nav-item">
+        <span class="nav-icon">📋</span>
+        Quest Log
+        <span class="nav-badge" id="nav-tasks">0</span>
+      </a>
+      <a href="training.html" class="nav-item active">
+        <span class="nav-icon">🏋️</span>
+        Entrenamiento
+      </a>
+
+      <div class="sb-sec-label" style="margin-top:8px">Estadísticas</div>
+      <div class="nav-item"><span class="nav-icon">⚡</span>Atributos</div>
+      <div class="nav-item"><span class="nav-icon">💰</span>Finanzas</div>
+      <div class="nav-item"><span class="nav-icon">🍎</span>Nutrición</div>
+      <div class="nav-item"><span class="nav-icon">💪</span>Fitness</div>
+    </nav>
+
+    <div class="sb-char">
+      <div class="sb-char-avatar">🧙</div>
+      <div>
+        <div class="sb-char-name" id="sb-name">—</div>
+        <div class="sb-char-level" id="sb-level">Lv. —</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══════════════════════════════════════════════════ -->
+  <main class="main">
+    <header class="topbar">
+      <div>
+        <div class="tb-greeting">🏋️ Entrenamiento</div>
+        <div class="tb-sub">Analytics · fuerza, progresión &amp; nutrición</div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-chip">
+          <span class="dot"></span>
+          <span id="tb-streak">Datos en vivo</span>
+        </div>
+        <a class="btn-open" href="Entrenamiento.html" target="_blank" rel="noopener">⤢ Abrir en pestaña</a>
+      </div>
+    </header>
+
+    <div class="frame-wrap">
+      <iframe class="embed" src="Entrenamiento.html" title="Entrenamiento — Analytics" loading="lazy"></iframe>
+    </div>
+  </main>
+</div>
+
+<script>
+/* Rellena el footer del sidebar y el chip de racha (mismo patrón que index.html).
+   No afecta al iframe: si algo falla, el dashboard de entrenamiento sigue funcionando. */
+const SUPA_URL = 'https://klorwiibsviqlwbplqdr.supabase.co'
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s'
+const HDRS = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+
+function getLevel(xp) {
+  if (xp < 501)   return Math.floor(xp / 100) + 1
+  if (xp < 2001)  return 5  + Math.floor((xp - 500)  / 150)
+  if (xp < 6001)  return 15 + Math.floor((xp - 2000) / 266)
+  if (xp < 15001) return 30 + Math.floor((xp - 6000) / 450)
+  if (xp < 40001) return 50 + Math.floor((xp - 15000)/ 1000)
+  return Math.min(100, 75 + Math.floor((xp - 40000) / 3000))
+}
+function lvTitle(lv) {
+  if (lv <= 5) return 'Novato'; if (lv <= 15) return 'Aprendiz'; if (lv <= 30) return 'Explorador'
+  if (lv <= 50) return 'Veterano'; if (lv <= 75) return 'Maestro'; return 'Leyenda'
+}
+async function loadShell() {
+  try {
+    const [dashR, tasksR] = await Promise.all([
+      fetch(`${SUPA_URL}/rest/v1/dashboard_today?limit=1`, { headers: HDRS }),
+      fetch(`${SUPA_URL}/rest/v1/tasks?status=in.("inbox","next","waiting")&select=id`, { headers: HDRS }),
+    ])
+    const dash  = (await dashR.json())[0] || {}
+    const tasks = await tasksR.json()
+    const lv = getLevel(dash.total_xp ?? 0)
+    document.getElementById('sb-name').textContent  = dash.name ?? 'Aventurero'
+    document.getElementById('sb-level').textContent = `Lv. ${lv} ${lvTitle(lv)}`
+    document.getElementById('tb-streak').textContent = `🔥 Racha: ${dash.current_streak ?? 0} días`
+    const badge = document.getElementById('nav-tasks')
+    if (badge && Array.isArray(tasks)) badge.textContent = tasks.length
+  } catch (e) { /* silencioso */ }
+}
+loadShell()
+</script>
+</body>
+</html>

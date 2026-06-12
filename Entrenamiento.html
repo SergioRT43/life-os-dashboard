@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AETHER — Analytics</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<style>
+  :root{
+    --bg:#0A0C18;--panel:#141829;--raised:#1B2034;--well:#0B0E1A;--line:#242A40;--line-soft:#1C2236;
+    --ink:#F2F3FA;--muted:#8087A6;--dim:#5A6080;
+    --fuerza:#FF5C7A;--vitalidad:#FF9F45;--riqueza:#FFC247;--mente:#4FB6FF;--disciplina:#A78BFA;--ok:#3FD68B;--green:#46C98B;--r:16px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--ink);font-family:'Manrope',sans-serif;min-height:100vh;line-height:1.4;
+    background-image:radial-gradient(900px 500px at 85% -8%, rgba(79,182,255,.07), transparent),radial-gradient(800px 460px at -5% 108%, rgba(167,139,250,.07), transparent);}
+  .mono{font-family:'JetBrains Mono',monospace} .disp{font-family:'Space Grotesk',sans-serif}
+  .wrap{max-width:1140px;margin:0 auto;padding:26px 20px 80px}
+  .topbar{display:flex;align-items:center;gap:16px;flex-wrap:wrap;background:linear-gradient(155deg,var(--panel),var(--raised));border:1px solid var(--line);border-radius:18px;padding:16px 22px}
+  .brand{display:flex;align-items:center;gap:10px}.brand .g{font-size:24px}
+  .brand b{font-family:'Space Grotesk';font-size:18px;letter-spacing:2px}.brand span{font-size:11px;color:var(--dim);letter-spacing:2px;text-transform:uppercase}
+  .pillchips{display:flex;gap:8px;margin-left:auto;flex-wrap:wrap}
+  .chip{display:flex;align-items:center;gap:6px;background:var(--well);border:1px solid var(--line-soft);border-radius:20px;padding:6px 12px;font-size:12px}
+  .chip .d{width:8px;height:8px;border-radius:50%}.chip.on .d{background:var(--ok);box-shadow:0 0 8px var(--ok)}.chip.off .d{background:var(--dim)}
+  .chip.on{color:var(--ink)}.chip.off{color:var(--muted)}
+  .streakchip{background:rgba(255,159,69,.12);border-color:rgba(255,159,69,.3);color:var(--vitalidad);font-weight:600}
+  .sec{margin-top:24px}
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+  .sec-head h2{font-family:'Space Grotesk';font-size:14px;letter-spacing:2px;text-transform:uppercase;color:var(--muted);font-weight:600}
+  .sec-head .ln{flex:1;height:1px;background:var(--line-soft)}
+  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+  @media(max-width:860px){.grid2,.grid3{grid-template-columns:1fr}}
+  .card{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:20px}
+  .card h3{font-size:13px;letter-spacing:1px;text-transform:uppercase;color:var(--muted);margin-bottom:14px;font-weight:600}
+  .ctrls{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:14px}
+  .sel{flex:1;min-width:160px;position:relative}
+  .sel select{width:100%;appearance:none;background:var(--well);border:1px solid var(--line);color:var(--ink);
+    border-radius:10px;padding:10px 34px 10px 14px;font-family:'Manrope';font-size:14px;font-weight:600;cursor:pointer}
+  .sel::after{content:"▾";position:absolute;right:14px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none}
+  .ex{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--line-soft);font-size:14px}
+  .ex:last-child{border-bottom:none}
+  .ex .nm{font-weight:600;flex:1;min-width:0}.ex .nm small{display:block;color:var(--dim);font-weight:500;font-size:11px}
+  .pill{font-size:11px;padding:3px 9px;border-radius:20px;white-space:nowrap;font-weight:600}
+  .pill.up{background:rgba(63,214,139,.14);color:var(--ok);border:1px solid rgba(63,214,139,.3)}
+  .pill.hold{background:rgba(128,135,166,.12);color:var(--muted);border:1px solid var(--line)}
+  .pill.none{background:rgba(79,182,255,.10);color:var(--mente);border:1px solid rgba(79,182,255,.25)}
+  .colh{font-family:'Space Grotesk';font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px;font-weight:700}
+  .colh.push{color:var(--fuerza)}.colh.pull{color:var(--mente)}.colh.legs{color:var(--vitalidad)}
+  .toggle{display:flex;gap:4px;background:var(--well);border:1px solid var(--line-soft);border-radius:9px;padding:3px}
+  .toggle button{background:none;border:none;color:var(--muted);font-family:'Manrope';font-weight:600;font-size:12px;padding:5px 12px;border-radius:6px;cursor:pointer}
+  .toggle button.active{background:var(--raised);color:var(--ink)}
+  .wkg{font-family:'JetBrains Mono';color:var(--muted);font-size:13px}
+  .stat{display:flex;align-items:baseline;gap:8px;margin-bottom:8px;flex-wrap:wrap}
+  .stat .big{font-family:'JetBrains Mono';font-size:28px;font-weight:700}
+  .stat .u{color:var(--muted);font-size:13px}.stat .rng{margin-left:auto;font-size:12px;color:var(--dim)}
+  canvas{max-height:280px}
+  .empty{color:var(--dim);font-size:13px;text-align:center;padding:24px}
+  .banner{background:rgba(255,194,71,.10);border:1px solid rgba(255,194,71,.3);color:var(--riqueza);padding:10px 14px;border-radius:10px;font-size:13px;margin-bottom:18px}
+  .hint{font-size:11px;color:var(--dim);margin-top:8px;text-align:center}
+  .foot{margin-top:30px;text-align:center;color:var(--dim);font-size:12px}
+  .legend{display:flex;gap:16px;justify-content:center;font-size:12px;color:var(--muted);margin-top:10px;flex-wrap:wrap}
+  .legend i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:middle}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div id="banner" class="banner" style="display:none"></div>
+
+  <div class="topbar">
+    <div class="brand"><span class="g">📊</span><div><b class="disp">AETHER</b><br><span>Analytics · Entrenamiento &amp; Nutrición</span></div></div>
+    <div class="pillchips" id="chips"></div>
+  </div>
+
+  <!-- FUERZA: COMPUESTOS -->
+  <div class="sec">
+    <div class="sec-head"><h2>Fuerza · compuestos</h2><div class="ln"></div></div>
+    <div class="grid2">
+      <div class="card">
+        <h3>e1RM evolutivo</h3>
+        <div class="ctrls">
+          <div class="sel"><select id="e1rm-ex"></select></div>
+          <div class="toggle" data-target="e1rm"><button data-d="7">1S</button><button data-d="30" class="active">1M</button><button data-d="90">3M</button></div>
+        </div>
+        <div class="stat"><span class="big" id="e1rm-cur" style="color:var(--fuerza)">—</span><span class="u">kg e1RM actual</span><span class="rng" id="e1rm-delta"></span></div>
+        <canvas id="e1rmChart"></canvas>
+        <div id="e1rm-empty" class="empty" style="display:none">Sin datos de este ejercicio todavía.</div>
+      </div>
+      <div class="card">
+        <h3>Fuerza relativa (e1RM ÷ peso)</h3>
+        <div class="ctrls">
+          <div class="sel"><select id="ratio-ex"></select></div>
+          <div class="toggle" data-target="ratio"><button data-d="7">1S</button><button data-d="30" class="active">1M</button><button data-d="90">3M</button></div>
+        </div>
+        <div class="stat"><span class="big" id="ratio-cur" style="color:var(--ok)">—</span><span class="u">× peso corporal</span></div>
+        <canvas id="ratioChart"></canvas>
+        <div id="ratio-empty" class="empty" style="display:none">Necesita entrenamientos + al menos un pesaje.</div>
+        <div class="hint">Si sube con tu peso estable → estás recomponiendo.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FUERZA: AISLADOS -->
+  <div class="sec">
+    <div class="sec-head"><h2>Fuerza · aislados (tonelaje)</h2><div class="ln"></div></div>
+    <div class="card">
+      <h3>Tonelaje por ejercicio</h3>
+      <div class="ctrls">
+        <div class="sel"><select id="acc-ex"></select></div>
+        <div class="toggle" data-target="acc"><button data-d="7">1S</button><button data-d="30" class="active">1M</button><button data-d="90">3M</button></div>
+      </div>
+      <div class="stat"><span class="big" id="acc-cur" style="color:var(--disciplina)">—</span><span class="u">kg tonelaje última sesión</span></div>
+      <canvas id="accChart"></canvas>
+      <div id="acc-empty" class="empty" style="display:none">Sin datos de este ejercicio todavía.</div>
+    </div>
+  </div>
+
+  <!-- ESTADO DE PROGRESIÓN -->
+  <div class="sec">
+    <div class="sec-head"><h2>Estado de progresión</h2><div class="ln"></div></div>
+    <div class="grid3" id="prog-cols"></div>
+    <div class="hint">Solo lectura · el registro de series se hace por el bot de Telegram.</div>
+  </div>
+
+  <!-- NUTRICIÓN HISTÓRICA -->
+  <div class="sec">
+    <div class="sec-head"><h2>Consumo de macros · histórico</h2><div class="ln"></div></div>
+    <div class="card">
+      <div class="ctrls">
+        <div class="toggle" id="macro-toggle"><button data-m="prot" class="active">Proteína</button><button data-m="cal">Calorías</button><button data-m="carb">Carbos</button><button data-m="fat">Grasas</button></div>
+        <div class="toggle" data-target="macro" style="margin-left:auto"><button data-d="7">1S</button><button data-d="30" class="active">1M</button><button data-d="90">3M</button></div>
+      </div>
+      <div class="stat"><span class="big" id="macro-avg">—</span><span class="u" id="macro-unit"></span><span class="u">promedio</span><span class="rng" id="macro-range"></span></div>
+      <canvas id="macroChart"></canvas>
+      <div id="macro-empty" class="empty" style="display:none">Aún sin registros de nutrición.</div>
+      <div class="legend"><span><i style="background:var(--green)"></i>Consumo</span><span><i style="background:var(--ink);height:3px;border-radius:2px"></i>Meta</span><span><i style="background:rgba(70,201,139,.25)"></i>Rango</span></div>
+    </div>
+  </div>
+
+  <!-- RECOMPOSICIÓN -->
+  <div class="sec">
+    <div class="sec-head"><h2>Recomposición</h2><div class="ln"></div></div>
+    <div class="card">
+      <h3 style="display:flex;justify-content:space-between;align-items:center">Tendencia peso / cintura
+        <div class="toggle" data-target="trend"><button data-d="7">1S</button><button data-d="30">1M</button><button data-d="90" class="active">3M</button></div>
+      </h3>
+      <canvas id="trendChart"></canvas>
+      <div id="trend-empty" class="empty" style="display:none">Sin pesajes registrados. Regístralos por el bot con /pesaje.</div>
+    </div>
+  </div>
+
+  <div class="foot">AETHER · Life OS · datos en vivo desde Supabase · <span id="updated"></span></div>
+</div>
+
+<script>
+const SUPABASE_URL = "https://klorwiibsviqlwbplqdr.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s";
+
+const WT={push:{l:"Push · Empuje",c:"push"},pull:{l:"Pull · Tracción",c:"pull"},legs:{l:"Legs · Pierna",c:"legs"}};
+const MACROS={prot:{key:"prot",unit:"g",color:"#FF5C7A"},cal:{key:"cal",unit:"kcal",color:"#FFC247"},carb:{key:"carb",unit:"g",color:"#4FB6FF"},fat:{key:"fat",unit:"g",color:"#A78BFA"}};
+const DEMO=!SUPABASE_ANON_KEY||SUPABASE_ANON_KEY.startsWith("PEGA");
+let sb=null;
+// estado: datos crudos + selección/rango por gráfico
+const S={
+  e1rm:{rows:[],ex:null,days:30},
+  ratio:{rows:[],ex:null,days:30},
+  acc:{rows:[],ex:null,days:30},
+  macro:{macro:"prot",days:30},
+  trend:{rows:[],days:90},
+  nut:[],
+};
+
+async function q(view,build){try{let x=sb.from(view).select("*");if(build)x=build(x);const{data,error}=await x;if(error)throw error;return data||[];}catch(e){console.warn(view,e.message);return[];}}
+function cutDays(rows,days){if(days>=9999)return rows;const cutoff=new Date();cutoff.setDate(cutoff.getDate()-days);
+  return rows.filter(r=>new Date(r.entry_date)>=cutoff);}
+function fillSelect(id,names,keep){const sel=document.getElementById(id);const prev=keep||sel.value;
+  sel.innerHTML=names.map(n=>`<option>${n}</option>`).join("");if(names.includes(prev))sel.value=prev;return sel.value;}
+function baseOpts(dual){return{responsive:true,plugins:{legend:{display:false}},interaction:{mode:"index",intersect:false},
+  scales:Object.assign({x:{ticks:{color:"#5A6080",font:{size:10}},grid:{color:"#1C2236"}},y:{ticks:{color:"#5A6080"},grid:{color:"#1C2236"}}},
+    dual?{y1:{position:"right",ticks:{color:"#4FB6FF"},grid:{display:false}}}:{})};}
+
+function renderChips(t){t=t||{};
+  const items=[{t:"Fuerza",ok:t.strength_done},{t:"Cardio",ok:(t.cardio_sessions_today||0)>0},{t:"Movilidad",ok:t.mobility_done},{t:"Equilibrio",ok:t.balance_done}];
+  let h=items.map(x=>`<span class="chip ${x.ok?'on':'off'}"><span class="d"></span>${x.t}</span>`).join("");
+  if(t.streak!=null)h+=`<span class="chip streakchip">${t.streak}🔥 racha</span>`;
+  document.getElementById("chips").innerHTML=h;}
+
+function pillClass(r){if(/SUBE/.test(r))return"up";if(/Sin registro/.test(r))return"none";return"hold";}
+function renderProgression(rows){const cont=document.getElementById("prog-cols");cont.innerHTML="";
+  Object.keys(WT).forEach(wt=>{const list=rows.filter(r=>r.workout_type===wt);
+    const card=document.createElement("div");card.className="card";card.innerHTML=`<div class="colh ${WT[wt].c}">${WT[wt].l}</div>`;
+    list.forEach(r=>{const cls=pillClass(r.recommendation||""),w=Number(r.current_weight);
+      card.insertAdjacentHTML("beforeend",`<div class="ex"><div class="nm">${r.name}<small>${r.rep_low}–${r.rep_high} reps · ${r.target_sets}×</small></div>
+        <span class="pill ${cls}">${(r.recommendation||"").replace(/^[^ ]+ /,"").slice(0,22)}</span><span class="wkg">${w>0?w+"kg":"—"}</span></div>`);});
+    cont.appendChild(card);});}
+
+let e1rmChart,ratioChart,accChart,macroChart,trendChart;
+
+function drawE1RM(){
+  const ex=S.e1rm.ex, all=S.e1rm.rows.filter(r=>r.name===ex);
+  const data=cutDays(all,S.e1rm.days);
+  const el=document.getElementById("e1rmChart"),emp=document.getElementById("e1rm-empty");
+  if(!data.length){el.style.display="none";emp.style.display="block";document.getElementById("e1rm-cur").textContent="—";document.getElementById("e1rm-delta").textContent="";return;}
+  el.style.display="block";emp.style.display="none";
+  const vals=data.map(d=>d.e1rm);const cur=vals[vals.length-1],first=vals[0];
+  document.getElementById("e1rm-cur").textContent=cur;
+  const dlt=cur-first;document.getElementById("e1rm-delta").textContent=(dlt>=0?"+":"")+dlt.toFixed(1)+" kg en el periodo";
+  e1rmChart&&e1rmChart.destroy();
+  e1rmChart=new Chart(el,{type:"line",data:{labels:data.map(d=>d.entry_date.slice(5)),
+    datasets:[{data:vals,borderColor:"#FF5C7A",backgroundColor:"rgba(255,92,122,.12)",fill:true,tension:.3,pointRadius:3}]},options:baseOpts(false)});
+}
+function drawRatio(){
+  const ex=S.ratio.ex, all=S.ratio.rows.filter(r=>r.name===ex&&r.ratio!=null);
+  const data=cutDays(all,S.ratio.days);
+  const el=document.getElementById("ratioChart"),emp=document.getElementById("ratio-empty");
+  if(!data.length){el.style.display="none";emp.style.display="block";document.getElementById("ratio-cur").textContent="—";return;}
+  el.style.display="block";emp.style.display="none";
+  const vals=data.map(d=>d.ratio);document.getElementById("ratio-cur").textContent=vals[vals.length-1]+"×";
+  ratioChart&&ratioChart.destroy();
+  ratioChart=new Chart(el,{type:"line",data:{labels:data.map(d=>d.entry_date.slice(5)),
+    datasets:[{data:vals,borderColor:"#3FD68B",backgroundColor:"rgba(63,214,139,.12)",fill:true,tension:.3,pointRadius:3}]},options:baseOpts(false)});
+}
+function drawAcc(){
+  const ex=S.acc.ex, all=S.acc.rows.filter(r=>r.name===ex);
+  const data=cutDays(all,S.acc.days);
+  const el=document.getElementById("accChart"),emp=document.getElementById("acc-empty");
+  if(!data.length){el.style.display="none";emp.style.display="block";document.getElementById("acc-cur").textContent="—";return;}
+  el.style.display="block";emp.style.display="none";
+  const vals=data.map(d=>d.volume_kg);document.getElementById("acc-cur").textContent=vals[vals.length-1];
+  accChart&&accChart.destroy();
+  accChart=new Chart(el,{type:"bar",data:{labels:data.map(d=>d.entry_date.slice(5)),
+    datasets:[{data:vals,backgroundColor:"#A78BFA",borderRadius:5}]},options:baseOpts(false)});
+}
+function drawTrend(){
+  const data=cutDays(S.trend.rows,S.trend.days);
+  const el=document.getElementById("trendChart"),emp=document.getElementById("trend-empty");
+  if(!data.length){el.style.display="none";emp.style.display="block";return;}el.style.display="block";emp.style.display="none";
+  trendChart&&trendChart.destroy();
+  trendChart=new Chart(el,{type:"line",data:{labels:data.map(x=>x.entry_date.slice(5)),datasets:[
+    {label:"Peso",data:data.map(x=>x.weight_kg),borderColor:"#FF9F45",tension:.3,pointRadius:2},
+    {label:"Media 7d",data:data.map(x=>x.weight_ma7),borderColor:"#FFC247",borderDash:[5,4],tension:.3,pointRadius:0},
+    {label:"Cintura",data:data.map(x=>x.waist_cm),borderColor:"#4FB6FF",tension:.3,pointRadius:2,yAxisID:"y1"},
+  ]},options:Object.assign(baseOpts(true),{plugins:{legend:{display:true,position:"bottom",labels:{color:"#8087A6",font:{size:11}}}}})});
+}
+function drawMacro(){
+  const m=MACROS[S.macro.macro];let data=cutDays(S.nut,S.macro.days);
+  document.getElementById("macro-unit").textContent=m.unit;
+  const el=document.getElementById("macroChart"),emp=document.getElementById("macro-empty");
+  if(!data.length){el.style.display="none";emp.style.display="block";document.getElementById("macro-avg").textContent="—";document.getElementById("macro-range").textContent="";return;}
+  el.style.display="block";emp.style.display="none";
+  const intake=data.map(d=>d[m.key]),goal=data.map(d=>d[m.key+"_goal"]),low=data.map(d=>d[m.key+"_low"]),high=data.map(d=>d[m.key+"_high"]);
+  document.getElementById("macro-avg").textContent=Math.round(intake.reduce((a,b)=>a+(b||0),0)/intake.length);
+  document.getElementById("macro-range").textContent=`meta ${goal[0]} ${m.unit} · rango ${low[0]}–${high[0]}`;
+  macroChart&&macroChart.destroy();
+  macroChart=new Chart(el,{data:{labels:data.map(d=>d.entry_date.slice(5)),datasets:[
+    {type:"line",label:"high",data:high,borderColor:"transparent",backgroundColor:"rgba(70,201,139,.18)",pointRadius:0,fill:"+1",tension:0,order:3},
+    {type:"line",label:"low",data:low,borderColor:"transparent",pointRadius:0,fill:false,tension:0,order:3},
+    {type:"line",label:"meta",data:goal,borderColor:"#E7EAF5",borderWidth:2,pointRadius:0,tension:0,order:1},
+    {type:"bar",label:"consumo",data:intake,backgroundColor:m.color,borderRadius:5,barPercentage:.6,order:2},
+  ]},options:baseOpts(false)});
+}
+
+/* ===== toggles de rango (1S/1M/3M) genéricos ===== */
+document.querySelectorAll(".toggle[data-target]").forEach(tg=>{
+  tg.addEventListener("click",e=>{if(!e.target.dataset.d)return;
+    [...tg.children].forEach(b=>b.classList.toggle("active",b===e.target));
+    const tgt=tg.dataset.target;const d=+e.target.dataset.d;
+    if(tgt==="e1rm"){S.e1rm.days=d;drawE1RM();}
+    else if(tgt==="ratio"){S.ratio.days=d;drawRatio();}
+    else if(tgt==="acc"){S.acc.days=d;drawAcc();}
+    else if(tgt==="macro"){S.macro.days=d;drawMacro();}
+    else if(tgt==="trend"){S.trend.days=d;drawTrend();}});
+});
+document.getElementById("macro-toggle").addEventListener("click",e=>{if(!e.target.dataset.m)return;
+  S.macro.macro=e.target.dataset.m;[...e.currentTarget.children].forEach(b=>b.classList.toggle("active",b===e.target));drawMacro();});
+document.getElementById("e1rm-ex").addEventListener("change",e=>{S.e1rm.ex=e.target.value;drawE1RM();});
+document.getElementById("ratio-ex").addEventListener("change",e=>{S.ratio.ex=e.target.value;drawRatio();});
+document.getElementById("acc-ex").addEventListener("change",e=>{S.acc.ex=e.target.value;drawAcc();});
+
+const KEY_LIFTS=["Press de banca","Sentadilla trasera","Peso muerto rumano","Remo con barra"];
+async function loadAll(){
+  const [cat,prog,today,series,e1rm,ratio,vol,nut,dash]=await Promise.all([
+    q("exercises",x=>x.eq("is_active",true).order("workout_type").order("display_order")),
+    q("training_progression"),q("training_today"),q("body_metrics_series"),
+    q("strength_e1rm_compounds",x=>x.order("entry_date")),
+    q("recomp_ratio_history",x=>x.order("entry_date")),
+    q("exercise_volume_history",x=>x.order("entry_date")),
+    q("nutrition_history",x=>x.order("entry_date")),q("dashboard_today"),
+  ]);
+  const t=today[0]||{};t.streak=(dash[0]||{}).current_streak;renderChips(t);renderProgression(prog);
+  S.e1rm.rows=e1rm; S.ratio.rows=ratio; S.acc.rows=vol; S.trend.rows=series; S.nut=nut;
+  // Selectores desde el CATÁLOGO real por rol (todos los ejercicios, tengan datos o no)
+  const compounds=cat.filter(e=>e.role==="compound_primary"||e.role==="compound").map(e=>e.name);
+  const accessories=cat.filter(e=>e.role==="accessory").map(e=>e.name);
+  const keyLifts=cat.filter(e=>KEY_LIFTS.includes(e.name)).map(e=>e.name);
+  S.e1rm.ex=fillSelect("e1rm-ex", compounds.length?compounds:["Press de banca"], S.e1rm.ex);
+  S.ratio.ex=fillSelect("ratio-ex", keyLifts.length?keyLifts:KEY_LIFTS, S.ratio.ex);
+  S.acc.ex=fillSelect("acc-ex", accessories.length?accessories:["Curl de bíceps con barra"], S.acc.ex);
+  drawE1RM();drawRatio();drawAcc();drawTrend();drawMacro();
+  document.getElementById("updated").textContent="actualizado "+new Date().toLocaleTimeString();
+}
+
+function loadDemo(){
+  document.getElementById("banner").style.display="block";
+  document.getElementById("banner").innerHTML="⚙️ Modo demo — pega tu <b>ANON key</b> en CONFIG para ver tus datos reales.";
+  renderChips({strength_done:true,cardio_sessions_today:1,mobility_done:true,balance_done:false,streak:9});
+  renderProgression([
+    {name:"Press de banca",workout_type:"push",rep_low:5,rep_high:8,target_sets:4,current_weight:55,recommendation:"➕ MANTÉN 55 kg. Suma reps hasta 8."},
+    {name:"Press militar",workout_type:"push",rep_low:6,rep_high:10,target_sets:3,current_weight:32.5,recommendation:"⬆️ SUBE PESO: +2.5 kg."},
+    {name:"Dominadas",workout_type:"pull",rep_low:5,rep_high:10,target_sets:4,current_weight:0,recommendation:"🟦 Sin registro."},
+    {name:"Sentadilla trasera",workout_type:"legs",rep_low:5,rep_high:8,target_sets:4,current_weight:70,recommendation:"➕ MANTÉN 70 kg."},
+  ]);
+  const D=(o)=>`2026-05-${String(o).padStart(2,'0')}`;
+  S.e1rm.rows=[
+    {entry_date:D(5),name:"Press de banca",e1rm:64},{entry_date:D(12),name:"Press de banca",e1rm:66},{entry_date:D(19),name:"Press de banca",e1rm:66},{entry_date:D(26),name:"Press de banca",e1rm:69},
+    {entry_date:D(7),name:"Sentadilla trasera",e1rm:84},{entry_date:D(14),name:"Sentadilla trasera",e1rm:88},{entry_date:D(21),name:"Sentadilla trasera",e1rm:91},{entry_date:D(28),name:"Sentadilla trasera",e1rm:95},
+  ];
+  S.ratio.rows=[{entry_date:D(5),name:"Press de banca",ratio:0.85},{entry_date:D(26),name:"Press de banca",ratio:0.92},{entry_date:D(7),name:"Sentadilla trasera",ratio:1.12},{entry_date:D(28),name:"Sentadilla trasera",ratio:1.27}];
+  S.acc.rows=[{entry_date:D(8),name:"Curl de bíceps con barra",volume_kg:850},{entry_date:D(15),name:"Curl de bíceps con barra",volume_kg:910},{entry_date:D(22),name:"Curl de bíceps con barra",volume_kg:980},{entry_date:D(29),name:"Curl de bíceps con barra",volume_kg:1020},
+    {entry_date:D(8),name:"Elevación de gemelos",volume_kg:1600},{entry_date:D(22),name:"Elevación de gemelos",volume_kg:1750}];
+  S.trend.rows=[{entry_date:D(1),weight_kg:76,weight_ma7:76,waist_cm:89},{entry_date:D(12),weight_kg:75.4,weight_ma7:75.6,waist_cm:88},{entry_date:D(22),weight_kg:75.1,weight_ma7:75.2,waist_cm:87},{entry_date:D(31),weight_kg:74.8,weight_ma7:75.0,waist_cm:86}];
+  const days=[];for(let i=29;i>=0;i--){const d=new Date(2026,4,31-i);const iso=d.toISOString().slice(0,10);
+    days.push({entry_date:iso,cal:1600+Math.round(Math.random()*700),cal_goal:2250,cal_low:2100,cal_high:2400,prot:120+Math.round(Math.random()*60),prot_goal:165,prot_low:165,prot_high:190,carb:170+Math.round(Math.random()*90),carb_goal:240,carb_low:215,carb_high:265,fat:50+Math.round(Math.random()*30),fat_goal:70,fat_low:58,fat_high:82});}
+  S.nut=days;
+  const DEMO_COMPOUNDS=["Press de banca","Press militar de pie","Press inclinado mancuernas","Fondos en paralelas","Dominadas","Remo con barra","Remo en polea","Sentadilla trasera","Peso muerto rumano","Sentadilla búlgara"];
+  const DEMO_ACCESSORIES=["Curl femoral","Elevación de gemelos","Face pull","Curl de bíceps con barra","Curl martillo","Elevaciones laterales","Extensión tríceps en polea"];
+  S.e1rm.ex=fillSelect("e1rm-ex",DEMO_COMPOUNDS);
+  S.ratio.ex=fillSelect("ratio-ex",["Press de banca","Sentadilla trasera","Peso muerto rumano","Remo con barra"]);
+  S.acc.ex=fillSelect("acc-ex",DEMO_ACCESSORIES);
+  drawE1RM();drawRatio();drawAcc();drawTrend();drawMacro();
+  document.getElementById("updated").textContent="demo";
+}
+
+if(DEMO){loadDemo();}
+else{sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);loadAll();setInterval(loadAll,60000);}
+</script>
+</body>
+</html>

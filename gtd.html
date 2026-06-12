@@ -1,0 +1,747 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life OS — Quest Log</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Manrope:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ─── DESIGN TOKENS (idénticos a index.html) ───────────────── */
+    :root {
+      --bg-base:       #080B14;
+      --bg-card:       #0D1121;
+      --bg-elevated:   #121729;
+      --bg-hover:      rgba(255,255,255,0.035);
+
+      --fg-primary:    #E8EAF6;
+      --fg-secondary:  #8892A4;
+      --fg-tertiary:   #4E5568;
+
+      --accent-violet:     #8A6CFF;
+      --accent-violet-dim: rgba(138,108,255,0.15);
+      --accent-gold:       #F5C842;
+      --accent-gold-glow:  rgba(245,200,66,0.30);
+      --accent-cyan:       #40E0D0;
+
+      --attr-vitality:   #FF8A4C;
+      --attr-strength:   #FF5C7A;
+      --attr-agility:    #5FD68B;
+      --attr-intellect:  #4FB6FF;
+      --attr-spirit:     #B388FF;
+
+      --font-display: "Space Grotesk", system-ui, sans-serif;
+      --font-body:    "Manrope", system-ui, sans-serif;
+      --font-mono:    "JetBrains Mono", ui-monospace, monospace;
+
+      --border:        rgba(255,255,255,0.07);
+      --border-strong: rgba(255,255,255,0.13);
+
+      --r-md: 10px; --r-lg: 14px; --r-xl: 18px;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+    body {
+      font-family: var(--font-body);
+      background: var(--bg-base);
+      color: var(--fg-primary);
+      font-size: 14px; line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .app { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+    /* ─── SIDEBAR (idéntico a index.html) ──────────────────────── */
+    .sidebar {
+      width: 240px;
+      background: rgba(11,13,23,0.72);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column;
+      position: sticky; top: 0; height: 100vh; overflow-y: auto;
+    }
+    .sb-logo { padding: 18px 20px 16px; display: flex; align-items: center; gap: 10px; border-bottom: 1px solid var(--border); }
+    .sb-logo-icon { width: 34px; height: 34px; border-radius: 9px; background: linear-gradient(135deg, var(--accent-violet), #5c3ecc); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+    .sb-logo-name { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--fg-primary); }
+    .sb-logo-ver { font-size: 10px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+    .sb-nav { padding: 10px 0; flex: 1; }
+    .sb-sec-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: var(--fg-tertiary); padding: 8px 18px 4px; }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 16px; margin: 1px 8px;
+      border-radius: var(--r-md); border-left: 2px solid transparent;
+      cursor: pointer; text-decoration: none;
+      color: var(--fg-secondary); font-size: 13px; font-weight: 500;
+      transition: background 0.14s, color 0.14s;
+    }
+    .nav-item:hover { background: var(--bg-hover); color: var(--fg-primary); }
+    .nav-item.active {
+      background: linear-gradient(90deg, rgba(138,108,255,0.133), transparent);
+      border-left: 2px solid var(--accent-violet);
+      color: var(--fg-primary);
+    }
+    .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-badge { margin-left: auto; background: var(--accent-violet-dim); color: var(--accent-violet); font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 20px; font-family: var(--font-mono); }
+    .sb-char { padding: 14px 16px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+    .sb-char-avatar { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg, #1d1060, #0d1a40); display: flex; align-items: center; justify-content: center; font-size: 18px; border: 1px solid var(--border-strong); flex-shrink: 0; }
+    .sb-char-name { font-size: 13px; font-weight: 600; color: var(--fg-primary); }
+    .sb-char-level { font-size: 11px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+
+    /* ─── MAIN / TOPBAR ────────────────────────────────────────── */
+    .main { display: flex; flex-direction: column; min-height: 100vh; }
+    .topbar {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 0 28px; height: 60px;
+      border-bottom: 1px solid var(--border);
+      background: rgba(8,11,20,0.85);
+      backdrop-filter: blur(8px);
+      position: sticky; top: 0; z-index: 50;
+    }
+    .tb-greeting { font-family: var(--font-display); font-size: 15px; font-weight: 600; }
+    .tb-date { font-size: 12px; color: var(--fg-secondary); font-family: var(--font-mono); }
+    .tb-right { display: flex; align-items: center; gap: 10px; }
+    .tb-chip { display: flex; align-items: center; gap: 6px; padding: 5px 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 20px; font-size: 12px; font-family: var(--font-mono); color: var(--fg-secondary); }
+    .tb-chip .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-cyan); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.35} }
+    .btn-refresh {
+      display: flex; align-items: center; gap: 6px; padding: 6px 14px;
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-md);
+      color: var(--fg-secondary); font-size: 12px; font-family: var(--font-body);
+      cursor: pointer; transition: all 0.14s;
+    }
+    .btn-refresh:hover { background: var(--bg-hover); color: var(--fg-primary); border-color: var(--border-strong); }
+
+    /* ─── CONTENT ──────────────────────────────────────────────── */
+    .content-area {
+      flex: 1; padding: 24px 28px;
+      display: grid; grid-template-columns: 1fr 380px;
+      gap: 20px; align-items: start;
+      max-width: 1500px;
+    }
+    .col-left, .col-right { display: flex; flex-direction: column; gap: 20px; }
+
+    .card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-xl); overflow: hidden; }
+    .card-hd { display: flex; align-items: center; justify-content: space-between; padding: 15px 20px 13px; border-bottom: 1px solid var(--border); }
+    .card-title { font-family: var(--font-display); font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.09em; color: var(--fg-secondary); }
+    .card-count { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 2px 9px; border-radius: 20px; background: var(--accent-violet-dim); color: var(--accent-violet); }
+    .card-count.zero { background: rgba(95,214,139,0.12); color: var(--attr-agility); }
+
+    /* ─── WORKFLOW STRIP ───────────────────────────────────────── */
+    .wf-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+    .wf-tile {
+      background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--r-lg);
+      padding: 14px 16px; position: relative; overflow: hidden; cursor: pointer;
+      transition: border-color 0.15s; text-align: left;
+    }
+    .wf-tile:hover { border-color: var(--border-strong); }
+    .wf-tile::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px; background: var(--c); box-shadow: 0 0 10px var(--c); }
+    .wf-num { font-family: var(--font-mono); font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+    .wf-lbl { font-size: 11px; font-weight: 600; color: var(--fg-secondary); }
+    .wf-sub { font-size: 10px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+
+    /* ─── CAPTURE ──────────────────────────────────────────────── */
+    .capture-body { padding: 16px 20px; }
+    .capture-row { display: flex; gap: 8px; }
+    .cap-input {
+      flex: 1; background: var(--bg-elevated);
+      border: 1px solid var(--border); border-radius: var(--r-md);
+      padding: 10px 14px; color: var(--fg-primary);
+      font-size: 13px; font-family: var(--font-body); outline: none;
+      transition: border-color 0.14s;
+    }
+    .cap-input::placeholder { color: var(--fg-tertiary); }
+    .cap-input:focus { border-color: var(--accent-violet); }
+    .cap-btn {
+      padding: 10px 18px;
+      background: var(--accent-violet); border: none; border-radius: var(--r-md);
+      color: #fff; font-size: 13px; font-weight: 600; font-family: var(--font-body);
+      cursor: pointer; transition: opacity 0.15s; white-space: nowrap;
+    }
+    .cap-btn:hover { opacity: 0.85; }
+    .cap-hint { margin-top: 9px; font-size: 11px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+    .cap-hint b { color: var(--fg-secondary); }
+
+    /* ─── TASK ROWS ────────────────────────────────────────────── */
+    .t-list { padding: 0; }
+    .t-row {
+      display: grid; grid-template-columns: 4px 1fr auto;
+      align-items: center; gap: 12px;
+      padding: 11px 16px 11px 0;
+      border-bottom: 1px solid var(--border);
+      transition: background 0.14s;
+    }
+    .t-row:last-child { border-bottom: none; }
+    .t-row:hover { background: var(--bg-hover); }
+    .t-rail { height: 34px; border-radius: 0 2px 2px 0; background: var(--p, var(--accent-violet)); box-shadow: 0 0 12px color-mix(in srgb, var(--p, var(--accent-violet)) 45%, transparent); }
+    .t-info { min-width: 0; }
+    .t-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .t-meta { display: flex; gap: 8px; align-items: center; margin-top: 2px; flex-wrap: wrap; }
+    .t-ctx { font-size: 10px; color: var(--accent-violet); font-family: var(--font-mono); background: var(--accent-violet-dim); padding: 1px 7px; border-radius: 20px; }
+    .t-due { font-size: 10px; color: var(--fg-tertiary); font-family: var(--font-mono); }
+    .t-due.overdue { color: var(--attr-strength); }
+    .t-xp { font-size: 10px; color: var(--accent-gold); font-family: var(--font-mono); }
+    .t-actions { display: flex; gap: 5px; }
+    .t-btn {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: transparent; border: 1px solid var(--border);
+      color: var(--fg-tertiary); font-size: 12px;
+      cursor: pointer; display: flex; align-items: center; justify-content: center;
+      transition: all 0.14s;
+    }
+    .t-btn:hover { color: var(--fg-primary); border-color: var(--border-strong); background: var(--bg-hover); }
+    .t-btn.done:hover { background: rgba(95,214,139,0.12); color: var(--attr-agility); border-color: rgba(95,214,139,0.35); }
+    .t-btn.next:hover { background: rgba(245,200,66,0.12); color: var(--accent-gold); border-color: rgba(245,200,66,0.35); }
+    .t-btn.del:hover  { background: rgba(255,92,122,0.12); color: var(--attr-strength); border-color: rgba(255,92,122,0.35); }
+    .t-btn:disabled { opacity: 0.35; cursor: default; }
+
+    /* context group header inside Next */
+    .ctx-head {
+      padding: 9px 20px 5px;
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 0.09em; color: var(--fg-tertiary);
+      font-family: var(--font-mono);
+      border-bottom: 1px solid var(--border);
+      background: rgba(255,255,255,0.015);
+    }
+
+    .empty { padding: 26px 20px; text-align: center; color: var(--fg-tertiary); font-size: 13px; line-height: 1.7; }
+    .inbox-zero {
+      margin: 14px 16px; padding: 22px;
+      background: linear-gradient(180deg, rgba(95,214,139,0.06), transparent);
+      border: 1px solid rgba(95,214,139,0.22); border-radius: var(--r-lg);
+      text-align: center;
+    }
+    .iz-title { font-family: var(--font-display); font-size: 15px; font-weight: 700; color: var(--attr-agility); margin-bottom: 3px; }
+    .iz-sub { font-size: 12px; color: var(--fg-tertiary); }
+
+    /* ─── TELEGRAM CARD ────────────────────────────────────────── */
+    .tg-body { padding: 14px 20px 18px; font-size: 12px; color: var(--fg-secondary); line-height: 1.9; }
+    .tg-body code {
+      font-family: var(--font-mono); font-size: 11px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      padding: 2px 7px; border-radius: 6px; color: var(--accent-cyan);
+    }
+
+    /* ─── DONE TODAY ───────────────────────────────────────────── */
+    .done-row { display: flex; align-items: center; gap: 10px; padding: 9px 20px; border-bottom: 1px solid var(--border); }
+    .done-row:last-child { border-bottom: none; }
+    .done-check { color: var(--attr-agility); font-size: 13px; }
+    .done-title { flex: 1; font-size: 12px; color: var(--fg-secondary); text-decoration: line-through; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .done-xp { font-family: var(--font-mono); font-size: 11px; color: var(--accent-gold); }
+
+    /* ─── XP TOAST ─────────────────────────────────────────────── */
+    .xp-toast {
+      position: fixed; bottom: 24px; right: 24px;
+      background: var(--bg-elevated); border: 1px solid var(--border-strong);
+      border-radius: var(--r-lg); padding: 14px 20px;
+      display: flex; align-items: center; gap: 12px;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+      transform: translateY(80px); opacity: 0;
+      transition: all 0.32s cubic-bezier(0.34, 1.56, 0.64, 1);
+      z-index: 1000;
+    }
+    .xp-toast.show { transform: translateY(0); opacity: 1; }
+    .toast-ico { font-size: 22px; }
+    .toast-title { font-size: 14px; font-weight: 600; }
+    .toast-sub { font-family: var(--font-mono); font-size: 12px; color: var(--accent-gold); margin-top: 1px; }
+
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+
+    @media (max-width: 1100px) { .content-area { grid-template-columns: 1fr; } }
+  </style>
+</head>
+<body>
+<div class="app">
+
+  <!-- ═══ SIDEBAR ═══════════════════════════════════════════════ -->
+  <aside class="sidebar">
+    <div class="sb-logo">
+      <div class="sb-logo-icon">⚔️</div>
+      <div>
+        <div class="sb-logo-name">Life OS</div>
+        <div class="sb-logo-ver">v2.0 · AETHER</div>
+      </div>
+    </div>
+
+    <nav class="sb-nav">
+      <div class="sb-sec-label">Principal</div>
+      <a href="index.html" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        Dashboard
+      </a>
+      <a href="gtd.html" class="nav-item active">
+        <span class="nav-icon">📋</span>
+        Quest Log
+        <span class="nav-badge" id="nav-tasks">0</span>
+      </a>
+      <a href="training.html" class="nav-item">
+        <span class="nav-icon">🏋️</span>
+        Entrenamiento
+      </a>
+
+      <div class="sb-sec-label" style="margin-top:8px">Estadísticas</div>
+      <div class="nav-item"><span class="nav-icon">⚡</span>Atributos</div>
+      <div class="nav-item"><span class="nav-icon">💰</span>Finanzas</div>
+      <div class="nav-item"><span class="nav-icon">🍎</span>Nutrición</div>
+      <div class="nav-item"><span class="nav-icon">💪</span>Fitness</div>
+    </nav>
+
+    <div class="sb-char">
+      <div class="sb-char-avatar">🧙</div>
+      <div>
+        <div class="sb-char-name" id="sb-name">—</div>
+        <div class="sb-char-level" id="sb-level">Lv. —</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ═══ MAIN ═══════════════════════════════════════════════════ -->
+  <main class="main">
+
+    <header class="topbar">
+      <div>
+        <div class="tb-greeting">📋 Quest Log — Sistema GTD</div>
+        <div class="tb-date" id="tb-date"></div>
+      </div>
+      <div class="tb-right">
+        <div class="tb-chip">
+          <span class="dot"></span>
+          <span id="tb-streak">Sincronizando...</span>
+        </div>
+        <button class="btn-refresh" onclick="loadAll()">↻ Actualizar</button>
+      </div>
+    </header>
+
+    <div class="content-area">
+
+      <!-- LEFT COLUMN -->
+      <div class="col-left">
+
+        <!-- WORKFLOW STRIP -->
+        <div class="wf-grid">
+          <button class="wf-tile" style="--c:var(--attr-strength)" onclick="scrollToCard('card-inbox')">
+            <div class="wf-num" id="wf-inbox" style="color:var(--attr-strength)">0</div>
+            <div class="wf-lbl">📥 Inbox</div>
+            <div class="wf-sub">por procesar</div>
+          </button>
+          <button class="wf-tile" style="--c:var(--accent-gold)" onclick="scrollToCard('card-next')">
+            <div class="wf-num" id="wf-next" style="color:var(--accent-gold)">0</div>
+            <div class="wf-lbl">⚡ Próximas</div>
+            <div class="wf-sub">listas para hacer</div>
+          </button>
+          <button class="wf-tile" style="--c:var(--attr-intellect)" onclick="scrollToCard('card-waiting')">
+            <div class="wf-num" id="wf-waiting" style="color:var(--attr-intellect)">0</div>
+            <div class="wf-lbl">⏳ En espera</div>
+            <div class="wf-sub">delegadas / bloqueadas</div>
+          </button>
+          <button class="wf-tile" style="--c:var(--attr-spirit)" onclick="scrollToCard('card-someday')">
+            <div class="wf-num" id="wf-someday" style="color:var(--attr-spirit)">0</div>
+            <div class="wf-lbl">💭 Algún día</div>
+            <div class="wf-sub">incubadora</div>
+          </button>
+        </div>
+
+        <!-- CAPTURE -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-title">📥 Capturar</span>
+          </div>
+          <div class="capture-body">
+            <div class="capture-row">
+              <input class="cap-input" id="cap-input"
+                placeholder="¿Qué tienes en mente? — ej: llamar al dentista @llamar #1 !mañana"
+                onkeydown="if(event.key==='Enter') capture()">
+              <button class="cap-btn" onclick="capture()">+ Capturar</button>
+            </div>
+            <div class="cap-hint">
+              <b>@contexto</b> (ej. @casa @trabajo @llamar) · <b>#1/#2/#3</b> prioridad · <b>!hoy !mañana !2026-06-15</b> fecha límite
+            </div>
+          </div>
+        </div>
+
+        <!-- INBOX -->
+        <div class="card" id="card-inbox">
+          <div class="card-hd">
+            <span class="card-title">📥 Inbox — procesar</span>
+            <span class="card-count" id="cnt-inbox">0</span>
+          </div>
+          <div id="inbox-body"><div class="empty">Cargando…</div></div>
+        </div>
+
+        <!-- NEXT ACTIONS -->
+        <div class="card" id="card-next">
+          <div class="card-hd">
+            <span class="card-title">⚡ Próximas acciones</span>
+            <span class="card-count" id="cnt-next">0</span>
+          </div>
+          <div id="next-body"><div class="empty">Cargando…</div></div>
+        </div>
+
+        <!-- WAITING -->
+        <div class="card" id="card-waiting">
+          <div class="card-hd">
+            <span class="card-title">⏳ En espera</span>
+            <span class="card-count" id="cnt-waiting">0</span>
+          </div>
+          <div id="waiting-body"><div class="empty">Cargando…</div></div>
+        </div>
+
+        <!-- SOMEDAY -->
+        <div class="card" id="card-someday">
+          <div class="card-hd">
+            <span class="card-title">💭 Algún día / Quizás</span>
+            <span class="card-count" id="cnt-someday">0</span>
+          </div>
+          <div id="someday-body"><div class="empty">Cargando…</div></div>
+        </div>
+
+      </div><!-- /col-left -->
+
+      <!-- RIGHT COLUMN -->
+      <div class="col-right">
+
+        <!-- TELEGRAM GUIDE -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-title">🤖 Captura por Telegram</span>
+          </div>
+          <div class="tg-body">
+            El bot ya tiene GTD activo. Envíale:<br>
+            <code>tarea: pagar recibo de luz @casa #1 !hoy</code><br>
+            <code>mis tareas</code> — lista pendientes<br>
+            <code>mis tareas @trabajo</code> — filtra por contexto<br>
+            <code>done: recibo de luz</code> — completa y suma XP
+          </div>
+        </div>
+
+        <!-- DONE TODAY -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-title">✅ Completadas hoy</span>
+            <span class="card-count zero" id="cnt-done">0</span>
+          </div>
+          <div id="done-body"><div class="empty">Nada completado aún hoy.</div></div>
+        </div>
+
+        <!-- WEEKLY REVIEW -->
+        <div class="card">
+          <div class="card-hd">
+            <span class="card-title">🔍 Revisión semanal</span>
+          </div>
+          <div class="tg-body">
+            Checklist GTD (domingo recomendado):<br>
+            ① Vaciar el inbox → clasificar todo<br>
+            ② Revisar próximas acciones — ¿siguen vigentes?<br>
+            ③ Revisar "en espera" — ¿hay que dar seguimiento?<br>
+            ④ Revisar "algún día" — ¿algo se activa?<br>
+            ⑤ Mirar el calendario de la semana entrante
+          </div>
+        </div>
+
+      </div><!-- /col-right -->
+    </div>
+  </main>
+</div>
+
+<!-- XP TOAST -->
+<div class="xp-toast" id="xp-toast">
+  <div class="toast-ico">⚡</div>
+  <div>
+    <div class="toast-title" id="toast-title">¡Completado!</div>
+    <div class="toast-sub"   id="toast-sub"></div>
+  </div>
+</div>
+
+<script>
+/* ── CONFIG ──────────────────────────────────────────────────── */
+const SUPA_URL = 'https://klorwiibsviqlwbplqdr.supabase.co'
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtsb3J3aWlic3ZpcWx3YnBscWRyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1NjE2MjcsImV4cCI6MjA5NTEzNzYyN30.mYknsRf9OUIssXi3PZDBFcbybgVMORrSLSD0_UEve3s'
+const HDRS = { 'apikey': SUPA_KEY, 'Authorization': `Bearer ${SUPA_KEY}` }
+
+/* ── DATE HELPERS (hora local) ───────────────────────────────── */
+function pad2(n) { return String(n).padStart(2, '0') }
+function localToday() { const d = new Date(); return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}` }
+
+/* ── LEVEL MATH ──────────────────────────────────────────────── */
+function getLevel(xp) {
+  if (xp < 501)   return Math.floor(xp / 100) + 1
+  if (xp < 2001)  return 5  + Math.floor((xp - 500)  / 150)
+  if (xp < 6001)  return 15 + Math.floor((xp - 2000) / 266)
+  if (xp < 15001) return 30 + Math.floor((xp - 6000) / 450)
+  if (xp < 40001) return 50 + Math.floor((xp - 15000)/ 1000)
+  return Math.min(100, 75 + Math.floor((xp - 40000) / 3000))
+}
+function lvTitle(lv) {
+  if (lv <= 5) return 'Novato'; if (lv <= 15) return 'Aprendiz'; if (lv <= 30) return 'Explorador'
+  if (lv <= 50) return 'Veterano'; if (lv <= 75) return 'Maestro'; return 'Leyenda'
+}
+
+/* ── API ─────────────────────────────────────────────────────── */
+async function db(path) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${path}`, { headers: HDRS })
+    if (!r.ok) return []
+    const d = await r.json()
+    return Array.isArray(d) ? d : (d ? [d] : [])
+  } catch { return [] }
+}
+async function dbRpc(fn, params = {}) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/rpc/${fn}`, {
+      method: 'POST', headers: { ...HDRS, 'Content-Type': 'application/json' },
+      body: JSON.stringify(params)
+    })
+    return r.ok ? r.json() : null
+  } catch { return null }
+}
+async function dbPost(table, data) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}`, {
+      method: 'POST', headers: { ...HDRS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(data)
+    })
+    return r.ok
+  } catch { return false }
+}
+async function dbPatch(table, filter, data) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, {
+      method: 'PATCH', headers: { ...HDRS, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+      body: JSON.stringify(data)
+    })
+    return r.ok
+  } catch { return false }
+}
+async function dbDelete(table, filter) {
+  try {
+    const r = await fetch(`${SUPA_URL}/rest/v1/${table}?${filter}`, { method: 'DELETE', headers: HDRS })
+    return r.ok
+  } catch { return false }
+}
+
+/* ── HELPERS ─────────────────────────────────────────────────── */
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')
+}
+function setText(id, v) { const el = document.getElementById(id); if (el) el.textContent = v }
+function scrollToCard(id) { document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' }) }
+
+const P_COLOR = { 1: 'var(--attr-strength)', 2: 'var(--accent-gold)', 3: 'var(--attr-agility)' }
+
+/* ── RENDER: una fila de tarea ───────────────────────────────── */
+function taskRow(t, actions) {
+  const pc = P_COLOR[t.priority] ?? 'var(--accent-violet)'
+  const today = localToday()
+  const overdue = t.due_date && t.due_date < today
+  const btns = actions.map(a =>
+    `<button class="t-btn ${a.cls}" title="${a.tip}" onclick="${a.fn}('${t.id}', this)">${a.ico}</button>`
+  ).join('')
+  return `
+    <div class="t-row" id="task-${t.id}" style="--p:${pc}">
+      <div class="t-rail"></div>
+      <div class="t-info">
+        <div class="t-title">${escHtml(t.title)}</div>
+        <div class="t-meta">
+          <span class="t-ctx">${escHtml(t.context ?? '@inbox')}</span>
+          ${t.due_date ? `<span class="t-due ${overdue ? 'overdue' : ''}">${overdue ? '⚠️' : '📅'} ${t.due_date}</span>` : ''}
+          <span class="t-xp">+${t.xp_reward ?? 10} XP</span>
+        </div>
+      </div>
+      <div class="t-actions">${btns}</div>
+    </div>`
+}
+
+/* ── RENDER: secciones ───────────────────────────────────────── */
+function renderInbox(tasks) {
+  const body = document.getElementById('inbox-body')
+  setText('cnt-inbox', tasks.length); setText('wf-inbox', tasks.length)
+  if (!tasks.length) {
+    body.innerHTML = `<div class="inbox-zero"><div class="iz-title">🏆 ¡Inbox zero!</div><div class="iz-sub">Todo procesado. Mente como el agua.</div></div>`
+    return
+  }
+  body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'⚡', cls:'next', tip:'Mover a próximas acciones', fn:'toNext' },
+    { ico:'⏳', cls:'',     tip:'Mover a en espera',          fn:'toWaiting' },
+    { ico:'💭', cls:'',     tip:'Mover a algún día',          fn:'toSomeday' },
+    { ico:'✓',  cls:'done', tip:'Completar ahora (+XP)',      fn:'completeTask' },
+    { ico:'🗑', cls:'del',  tip:'Eliminar',                   fn:'removeTask' },
+  ])).join('') + '</div>'
+}
+
+function renderNext(tasks) {
+  const body = document.getElementById('next-body')
+  setText('cnt-next', tasks.length); setText('wf-next', tasks.length)
+  if (!tasks.length) { body.innerHTML = '<div class="empty">Sin próximas acciones. Procesa tu inbox con ⚡.</div>'; return }
+
+  /* agrupar por contexto */
+  const groups = {}
+  tasks.forEach(t => { const c = t.context ?? '@inbox'; (groups[c] ??= []).push(t) })
+
+  let html = ''
+  Object.keys(groups).sort().forEach(ctx => {
+    html += `<div class="ctx-head">${escHtml(ctx)} · ${groups[ctx].length}</div><div class="t-list">`
+    html += groups[ctx].map(t => taskRow(t, [
+      { ico:'✓',  cls:'done', tip:'Completar (+XP)', fn:'completeTask' },
+      { ico:'⏳', cls:'',     tip:'Pasa a en espera', fn:'toWaiting' },
+      { ico:'🗑', cls:'del',  tip:'Eliminar',         fn:'removeTask' },
+    ])).join('')
+    html += '</div>'
+  })
+  body.innerHTML = html
+}
+
+function renderWaiting(tasks) {
+  const body = document.getElementById('waiting-body')
+  setText('cnt-waiting', tasks.length); setText('wf-waiting', tasks.length)
+  if (!tasks.length) { body.innerHTML = '<div class="empty">Nada en espera.</div>'; return }
+  body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'⚡', cls:'next', tip:'Reactivar → próximas', fn:'toNext' },
+    { ico:'✓',  cls:'done', tip:'Completar (+XP)',      fn:'completeTask' },
+    { ico:'🗑', cls:'del',  tip:'Eliminar',              fn:'removeTask' },
+  ])).join('') + '</div>'
+}
+
+function renderSomeday(tasks) {
+  const body = document.getElementById('someday-body')
+  setText('cnt-someday', tasks.length); setText('wf-someday', tasks.length)
+  if (!tasks.length) { body.innerHTML = '<div class="empty">La incubadora está vacía.</div>'; return }
+  body.innerHTML = '<div class="t-list">' + tasks.map(t => taskRow(t, [
+    { ico:'⚡', cls:'next', tip:'Activar → próximas', fn:'toNext' },
+    { ico:'🗑', cls:'del',  tip:'Eliminar',            fn:'removeTask' },
+  ])).join('') + '</div>'
+}
+
+function renderDone(tasks) {
+  const body = document.getElementById('done-body')
+  setText('cnt-done', tasks.length)
+  if (!tasks.length) { body.innerHTML = '<div class="empty">Nada completado aún hoy.</div>'; return }
+  body.innerHTML = tasks.map(t => `
+    <div class="done-row">
+      <span class="done-check">✓</span>
+      <span class="done-title">${escHtml(t.title)}</span>
+      <span class="done-xp">+${t.xp_reward ?? 10} XP</span>
+    </div>`).join('')
+}
+
+/* ── ACCIONES ────────────────────────────────────────────────── */
+function fadeOut(id) {
+  const row = document.getElementById('task-' + id)
+  if (row) { row.style.transition = 'all 0.25s'; row.style.opacity = '0'; row.style.transform = 'translateX(16px)' }
+}
+async function setStatus(id, status) {
+  fadeOut(id)
+  await dbPatch('tasks', `id=eq.${id}`, { status, updated_at: new Date().toISOString() })
+  await loadAll()
+}
+async function toNext(id)    { await setStatus(id, 'next') }
+async function toWaiting(id) { await setStatus(id, 'waiting') }
+async function toSomeday(id) { await setStatus(id, 'someday') }
+
+async function completeTask(id, btn) {
+  if (btn) { btn.disabled = true; btn.textContent = '…' }
+  fadeOut(id)
+  const result = await dbRpc('complete_task', { p_task_id: id })
+  if (result && !result.error) {
+    const xp     = result.xp_result?.xp_awarded ?? result.xp_earned ?? 0
+    const streak = result.xp_result?.streak
+    const mult   = result.xp_result?.multiplier
+    let sub = `+${xp} XP Disciplina`
+    if (mult > 1) sub += ` (×${mult} racha)`
+    if (streak != null) sub += ` · 🔥 Racha: ${streak} días`
+    showToast('✅ ¡Tarea completada!', sub)
+  }
+  await loadAll()
+}
+
+async function removeTask(id) {
+  if (!confirm('¿Eliminar esta tarea definitivamente?')) return
+  fadeOut(id)
+  await dbDelete('tasks', `id=eq.${id}`)
+  await loadAll()
+}
+
+async function capture() {
+  const input = document.getElementById('cap-input')
+  const raw = input.value.trim()
+  if (!raw) return
+
+  const ctx  = raw.match(/@([\w]+)/)?.[1]?.toLowerCase()
+  const pri  = parseInt(raw.match(/#([123])/)?.[1] ?? '2')
+  let due = null
+  const dm = raw.match(/!(\d{4}-\d{2}-\d{2})/)
+  if (dm) due = dm[1]
+  else if (raw.includes('!hoy')) due = localToday()
+  else if (raw.includes('!mañana')) { const d = new Date(); d.setDate(d.getDate()+1); due = `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}` }
+
+  const title = raw.replace(/@[\w]+/g,'').replace(/#[123]/g,'').replace(/![\wáéíóúñ-]+/g,'').replace(/\s+/g,' ').trim()
+  if (!title) return
+
+  const ok = await dbPost('tasks', {
+    title,
+    context: ctx ? `@${ctx}` : '@inbox',
+    priority: pri,
+    status: 'inbox',
+    due_date: due,
+    xp_reward: 10 + (pri === 1 ? 10 : pri === 2 ? 5 : 0),
+    raw_input: raw,
+  })
+  if (ok) {
+    input.value = ''
+    showToast('📥 Capturada', escHtml(title))
+    await loadAll()
+  } else {
+    showToast('❌ Error', 'No se pudo guardar — revisa la conexión')
+  }
+}
+
+/* ── TOAST ───────────────────────────────────────────────────── */
+let toastTimer
+function showToast(title, sub) {
+  setText('toast-title', title); setText('toast-sub', sub)
+  const t = document.getElementById('xp-toast')
+  t.classList.add('show')
+  clearTimeout(toastTimer)
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3800)
+}
+
+/* ── LOAD ────────────────────────────────────────────────────── */
+async function loadAll() {
+  const today = localToday()
+  const [tasks, doneToday, dashArr] = await Promise.all([
+    db(`tasks?status=in.("inbox","next","waiting","someday")&order=priority.asc,created_at.asc&limit=200`),
+    db(`tasks?status=eq.done&done_at=gte.${today}T00:00:00&order=done_at.desc&select=id,title,xp_reward&limit=30`),
+    db('dashboard_today?limit=1'),
+  ])
+
+  const by = s => tasks.filter(t => t.status === s)
+  renderInbox(by('inbox'))
+  renderNext(by('next'))
+  renderWaiting(by('waiting'))
+  renderSomeday(by('someday'))
+  renderDone(doneToday)
+
+  const actionable = by('inbox').length + by('next').length + by('waiting').length
+  setText('nav-tasks', actionable)
+
+  const dash = dashArr[0]
+  if (dash) {
+    const lv = getLevel(dash.total_xp ?? 0)
+    setText('sb-name', dash.name ?? 'Aventurero')
+    setText('sb-level', `Lv. ${lv} ${lvTitle(lv)}`)
+    setText('tb-streak', `🔥 Racha: ${dash.current_streak ?? 0} días`)
+  }
+}
+
+/* ── INIT ────────────────────────────────────────────────────── */
+document.getElementById('tb-date').textContent =
+  new Date().toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
+loadAll()
+setInterval(loadAll, 60_000)
+</script>
+</body>
+</html>
