@@ -939,8 +939,8 @@
         <!-- NEXT ACTIONS -->
         <div class="card">
           <div class="card-hd">
-            <span class="card-title">⚡ Próximas acciones</span>
-            <a href="gtd.html" class="card-link">Ver todo →</a>
+            <span class="card-title">🎯 Para hoy</span>
+            <a href="gtd.html" class="card-link">Quest Log →</a>
           </div>
           <div id="tasks-body"><div class="empty">Cargando tareas...</div></div>
           <div class="na-capture">
@@ -1497,22 +1497,27 @@ function renderTasks(tasks) {
   const badge = document.getElementById('nav-tasks')
   if (badge) badge.textContent = tasks?.length ?? 0
 
-  if (!tasks || !tasks.length) {
-    body.innerHTML = '<div class="empty">🎉 ¡Inbox zero! Sin tareas pendientes.</div>'
+  const today = utcToday()
+
+  /* Solo lo de HOY: vencidas + con fecha de hoy (el detalle completo está en el Quest Log) */
+  const forToday = (tasks || [])
+    .filter(t => t.due_date && t.due_date <= today)
+    .sort((a, b) => a.due_date.localeCompare(b.due_date) || a.priority - b.priority)
+
+  if (!forToday.length) {
+    const pend = tasks?.length ?? 0
+    body.innerHTML = `<div class="empty">✨ Nada vence hoy.${pend ? `<br><a href="gtd.html" style="color:var(--accent-violet)">${pend} acción${pend !== 1 ? 'es' : ''} en el Quest Log</a>` : ''}</div>`
     return
   }
 
-  const P_COLOR = {
-    1: 'var(--attr-strength)',
-    2: 'var(--accent-gold)',
-    3: 'var(--attr-agility)',
-  }
+  const P_COLOR = { 1: 'var(--attr-strength)', 2: 'var(--accent-gold)', 3: 'var(--attr-agility)' }
 
-  const today = utcToday()
   let html = '<div class="na-list">'
-  tasks.slice(0, 8).forEach(t => {
-    const pc      = P_COLOR[t.priority] ?? 'var(--accent-violet)'
-    const overdue = t.due_date && t.due_date < today
+  forToday.slice(0, 6).forEach(t => {
+    const pc       = P_COLOR[t.priority] ?? 'var(--accent-violet)'
+    const overdue  = t.due_date < today
+    const dueLabel = overdue ? '⚠️ Vencida' : '🎯 Hoy'
+    const dueCol   = overdue ? 'var(--attr-strength)' : 'var(--accent-gold)'
     html += `
       <div class="na-row" id="task-${t.id}" style="--p:${pc}">
         <div class="na-rail"></div>
@@ -1520,15 +1525,15 @@ function renderTasks(tasks) {
           <div class="na-title">${escHtml(t.title)}</div>
           <div class="na-meta">
             <span class="na-ctx">${escHtml(t.context ?? '@inbox')}</span>
-            ${t.due_date ? `<span class="na-due">${overdue ? '⚠️ ' : '📅 '}${t.due_date}</span>` : ''}
+            <span class="na-due" style="color:${dueCol}">${dueLabel}</span>
           </div>
         </div>
         <button class="na-btn" title="Completar" onclick="completeTask('${t.id}', this)">✓</button>
       </div>`
   })
-  if (tasks.length > 8) {
+  if (forToday.length > 6) {
     html += `<div style="padding:8px 16px;font-size:11px;color:var(--fg-tertiary);text-align:center">
-      +${tasks.length - 8} más · <a href="gtd.html" style="color:var(--accent-violet)">Ver todo</a></div>`
+      +${forToday.length - 6} más para hoy · <a href="gtd.html" style="color:var(--accent-violet)">Ver todo</a></div>`
   }
   html += '</div>'
   body.innerHTML = html
