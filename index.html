@@ -527,22 +527,16 @@
     .fin-leg-name { color: var(--fg-secondary); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .fin-leg-amt { margin-left: auto; font-family: var(--font-mono); font-size: 12px; font-weight: 500; color: var(--fg-secondary); }
 
-    /* USD compact card */
-    .fin-usd {
-      margin-top: 16px;
-      background: var(--bg-elevated);
-      border: 1px solid color-mix(in srgb, var(--accent-gold) 35%, transparent);
-      border-radius: var(--r-lg);
-      padding: 13px 16px;
+    /* currency toggle */
+    .fin-toggle { display: flex; gap: 6px; margin-bottom: 16px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--r-md); padding: 4px; }
+    .fin-cur {
+      flex: 1; padding: 7px 12px; border-radius: 7px; border: none;
+      background: transparent; color: var(--fg-secondary);
+      font-family: var(--font-mono); font-size: 12px; font-weight: 700;
+      cursor: pointer; transition: all 0.14s;
     }
-    .fin-usd-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.12em; color: var(--accent-gold); font-family: var(--font-mono); margin-bottom: 10px; }
-    .fin-usd-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
-    .fin-usd-item { display: flex; align-items: center; gap: 7px; }
-    .fin-usd-ico { font-size: 15px; }
-    .fin-usd-meta { display: flex; flex-direction: column; }
-    .fin-usd-k { font-size: 9px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--fg-tertiary); font-weight: 700; }
-    .fin-usd-v { font-family: var(--font-mono); font-size: 15px; font-weight: 700; line-height: 1.2; }
-    .fin-usd-sep { width: 1px; height: 30px; background: var(--border); }
+    .fin-cur:hover { color: var(--fg-primary); }
+    .fin-cur.active { background: var(--accent-violet); color: #fff; box-shadow: 0 1px 6px rgba(138,108,255,0.4); }
 
     /* ─── IMPORT CSV ───────────────────────────────────────────── */
     .imp-body { padding: 16px 20px 20px; }
@@ -1300,7 +1294,7 @@ function renderNutrition(daily, goals, mealEntries) {
 }
 
 /* ── RENDER: FINANCES (Supabase finance views, S/) ──────────── */
-const CAT_COLORS = ['#FF5C7A', '#FFC247', '#4FB6FF', '#8A6CFF', '#5FD68B', '#7B82A3']
+const CAT_COLORS = ['#FF5C7A', '#FFC247', '#4FB6FF', '#8A6CFF', '#5FD68B', '#FF8A4C', '#B388FF', '#40E0D0', '#E879A6', '#7B82A3']
 
 function deltaHtml(pct, lowerIsBetter = false) {
   if (pct == null) return '<div class="fin-delta" style="color:var(--fg-tertiary)">— sin dato previo</div>'
@@ -1310,65 +1304,81 @@ function deltaHtml(pct, lowerIsBetter = false) {
   return `<div class="fin-delta ${good ? 'up' : 'down'}">${arrow} ${Math.abs(pct).toFixed(1)}% vs mes anterior</div>`
 }
 
-function renderFinances(fin) {
-  const body = document.getElementById('fin-body')
+/* moneda activa de la vista de finanzas */
+let FIN_DATA = null
+let finCurrency = 'S/'
+function setFinCurrency(cur) { finCurrency = cur; renderFinances(FIN_DATA) }
 
-  /* ── soles aggregates ── */
-  const balCur  = fin.balS[0]      || {}
-  const balPrev = fin.balPrevS[0]  || {}
+function renderFinances(fin) {
+  if (!fin) return
+  FIN_DATA = fin
+  const body = document.getElementById('fin-body')
+  const isSol = finCurrency === 'S/'
+  const fmt = isSol ? fmtSoles : fmtUsd
+
+  /* selección de datasets según moneda */
+  const d = isSol
+    ? { bal: fin.balS, balPrev: fin.balPrevS, acc: fin.accS, accHistPrev: fin.accHistPrevS, cats: fin.catsS }
+    : { bal: fin.balUsd, balPrev: fin.balPrevUsd, acc: fin.accUsd, accHistPrev: fin.accHistPrevUsd, cats: fin.catsUsd }
+
+  const balCur  = d.bal[0]     || {}
+  const balPrev = d.balPrev[0] || {}
   const income      = Number(balCur.total_ingresos ?? 0)
   const expense     = Number(balCur.total_gastos   ?? 0)
   const net         = Number(balCur.balance ?? (income - expense))
   const incomePrev  = Number(balPrev.total_ingresos ?? 0)
   const expensePrev = Number(balPrev.total_gastos   ?? 0)
 
-  const bankCur  = (fin.accS      || []).reduce((s, r) => s + Number(r.saldo_actual    ?? 0), 0)
-  const bankPrev = (fin.accHistPrevS || []).reduce((s, r) => s + Number(r.saldo_acumulado ?? 0), 0)
+  const bankCur  = (d.acc         || []).reduce((s, r) => s + Number(r.saldo_actual     ?? 0), 0)
+  const bankPrev = (d.accHistPrev || []).reduce((s, r) => s + Number(r.saldo_acumulado  ?? 0), 0)
 
   const savedPct = income > 0 ? (net / income) * 100 : 0
   const netCol   = net >= 0 ? 'var(--attr-agility)' : 'var(--attr-strength)'
 
-  /* ── category bar (gastos, abs) ── */
-  const cats = (fin.catsS || []).map(c => ({ name: c.categoria, amt: Math.abs(Number(c.total ?? 0)) }))
-                                .filter(c => c.amt > 0)
+  /* ── categorías de gasto (TODAS, abs) ── */
+  const cats = (d.cats || []).map(c => ({ name: c.categoria, amt: Math.abs(Number(c.total ?? 0)) }))
+                             .filter(c => c.amt > 0)
+                             .sort((a, b) => b.amt - a.amt)
   const catSum = cats.reduce((s, c) => s + c.amt, 0) || 1
 
   const catSegs = cats.map((c, i) =>
-    `<div class="fin-catseg" style="width:${(c.amt / catSum * 100).toFixed(2)}%;background:${CAT_COLORS[i % CAT_COLORS.length]}" title="${escHtml(c.name)}"></div>`
+    `<div class="fin-catseg" style="width:${(c.amt / catSum * 100).toFixed(2)}%;background:${CAT_COLORS[i % CAT_COLORS.length]}" title="${escHtml(c.name)} · ${fmt(c.amt)}"></div>`
   ).join('')
 
   const catLegend = cats.map((c, i) => `
     <div class="fin-leg-item">
       <span class="fin-leg-dot" style="background:${CAT_COLORS[i % CAT_COLORS.length]}"></span>
       <span class="fin-leg-name">${escHtml(c.name)}</span>
-      <span class="fin-leg-amt">${fmtSoles(c.amt)}</span>
+      <span class="fin-leg-amt">${fmt(c.amt)}</span>
     </div>`).join('')
 
-  /* ── USD card ── */
-  const usdBal = (fin.accUsd || []).reduce((s, r) => s + Number(r.saldo_actual ?? 0), 0)
-  const usdRow = fin.balUsd[0] || {}
-  const usdInc = Number(usdRow.total_ingresos ?? 0)
-  const usdExp = Number(usdRow.total_gastos   ?? 0)
+  /* toggle de moneda */
+  const toggle = `
+    <div class="fin-toggle">
+      <button class="fin-cur ${isSol ? 'active' : ''}" onclick="setFinCurrency('S/')">S/ Soles</button>
+      <button class="fin-cur ${!isSol ? 'active' : ''}" onclick="setFinCurrency('$')">$ Dólares</button>
+    </div>`
 
   body.innerHTML = `
     <div class="fin-body">
+      ${toggle}
       <div class="fin-grid">
         <div class="fin-tile" style="--c:var(--accent-gold)">
           <div class="fin-tile-ico">🏦</div>
           <div class="fin-label">Bank Balance</div>
-          <div class="fin-amount">${fmtSoles(bankCur)}</div>
+          <div class="fin-amount">${fmt(bankCur)}</div>
           ${deltaHtml(pctChange(bankCur, bankPrev))}
         </div>
         <div class="fin-tile" style="--c:var(--attr-agility)">
           <div class="fin-tile-ico">↓</div>
           <div class="fin-label">Income</div>
-          <div class="fin-amount" style="color:var(--attr-agility)">${fmtSoles(income)}</div>
+          <div class="fin-amount" style="color:var(--attr-agility)">${fmt(income)}</div>
           ${deltaHtml(pctChange(income, incomePrev))}
         </div>
         <div class="fin-tile" style="--c:var(--attr-strength)">
           <div class="fin-tile-ico">↑</div>
           <div class="fin-label">Expenses</div>
-          <div class="fin-amount" style="color:var(--attr-strength)">${fmtSoles(expense)}</div>
+          <div class="fin-amount" style="color:var(--attr-strength)">${fmt(expense)}</div>
           ${deltaHtml(pctChange(expense, expensePrev), true)}
         </div>
       </div>
@@ -1376,7 +1386,7 @@ function renderFinances(fin) {
       <div class="fin-net ${net < 0 ? 'neg' : ''}">
         <div class="fin-net-left">
           <span class="fin-net-label">Net this month</span>
-          <span class="fin-net-amount" style="color:${netCol}">${net >= 0 ? '+ ' : '− '}${fmtSoles(Math.abs(net))}</span>
+          <span class="fin-net-amount" style="color:${netCol}">${net >= 0 ? '+ ' : '− '}${fmt(Math.abs(net))}</span>
         </div>
         <div class="fin-net-saved"><b style="color:${netCol}">${savedPct.toFixed(0)}%</b> of income saved</div>
       </div>
@@ -1385,35 +1395,6 @@ function renderFinances(fin) {
         <div class="fin-catbar">${catSegs}</div>
         <div class="fin-legend">${catLegend}</div>
       ` : '<div class="empty" style="padding:8px 0">Sin gastos categorizados este mes.</div>'}
-
-      <div class="fin-usd">
-        <div class="fin-usd-label">USD · This month</div>
-        <div class="fin-usd-row">
-          <div class="fin-usd-item">
-            <span class="fin-usd-ico">💵</span>
-            <div class="fin-usd-meta">
-              <span class="fin-usd-k">Balance</span>
-              <span class="fin-usd-v">${fmtUsd(usdBal)}</span>
-            </div>
-          </div>
-          <div class="fin-usd-sep"></div>
-          <div class="fin-usd-item">
-            <span class="fin-usd-ico" style="color:var(--attr-agility)">↑</span>
-            <div class="fin-usd-meta">
-              <span class="fin-usd-k">Income</span>
-              <span class="fin-usd-v" style="color:var(--attr-agility)">${fmtUsd(usdInc)}</span>
-            </div>
-          </div>
-          <div class="fin-usd-sep"></div>
-          <div class="fin-usd-item">
-            <span class="fin-usd-ico" style="color:var(--attr-strength)">↓</span>
-            <div class="fin-usd-meta">
-              <span class="fin-usd-k">Expenses</span>
-              <span class="fin-usd-v" style="color:var(--attr-strength)">${fmtUsd(usdExp)}</span>
-            </div>
-          </div>
-        </div>
-      </div>
     </div>`
 }
 
@@ -1612,7 +1593,8 @@ async function loadAll() {
   const [
     dashArr, entries, habits, tasks, habitEntries7, statsArr,
     nutDailyArr, nutGoalsArr,
-    balS, balPrevS, accS, accHistPrevS, catsS, balUsd, accUsd
+    balS, balPrevS, accS, accHistPrevS, catsS,
+    balUsd, balPrevUsd, accUsd, accHistPrevUsd, catsUsd
   ] = await Promise.all([
     db('dashboard_today?limit=1'),
     db(`entries?entry_date=eq.${today}&order=created_at.desc`),
@@ -1623,14 +1605,18 @@ async function loadAll() {
     /* ── NUTRITION (vista diaria + metas) ── */
     db(`nutrition_daily?entry_date=eq.${today}&limit=1`),
     db(`nutrition_goals?order=active_from.desc&limit=1`),
-    /* ── FINANCE VIEWS (soles + usd) ── */
+    /* ── FINANCE · SOLES ── */
     db(`finance_balance?moneda=eq.${SOL}&mes=eq.${mNow}`),
     db(`finance_balance?moneda=eq.${SOL}&mes=eq.${mPrev}`),
     db(`account_balances?moneda=eq.${SOL}&select=saldo_actual`),
     db(`account_balance_history?moneda=eq.${SOL}&mes=eq.${mPrev}&select=saldo_acumulado`),
-    db(`finance_monthly_summary?mes=eq.${mNow}&moneda=eq.${SOL}&tipo=eq.Gasto&order=total.asc&limit=5&select=categoria,total`),
+    db(`finance_monthly_summary?mes=eq.${mNow}&moneda=eq.${SOL}&tipo=eq.Gasto&order=total.asc&select=categoria,total`),
+    /* ── FINANCE · USD ── */
     db(`finance_balance?moneda=eq.${USD}&mes=eq.${mNow}`),
+    db(`finance_balance?moneda=eq.${USD}&mes=eq.${mPrev}`),
     db(`account_balances?moneda=eq.${USD}&select=saldo_actual`),
+    db(`account_balance_history?moneda=eq.${USD}&mes=eq.${mPrev}&select=saldo_acumulado`),
+    db(`finance_monthly_summary?mes=eq.${mNow}&moneda=eq.${USD}&tipo=eq.Gasto&order=total.asc&select=categoria,total`),
   ])
 
   const dash     = dashArr[0]  ?? null
@@ -1641,7 +1627,7 @@ async function loadAll() {
   renderStats(dash, statsRow)
   renderHabits(habits, habitEntries7)
   renderNutrition(nutDailyArr[0] ?? null, nutGoalsArr[0] ?? null, mealEntries)
-  renderFinances({ balS, balPrevS, accS, accHistPrevS, catsS, balUsd, accUsd })
+  renderFinances({ balS, balPrevS, accS, accHistPrevS, catsS, balUsd, balPrevUsd, accUsd, accHistPrevUsd, catsUsd })
   renderAttributes(dash)
   renderFeed(entries)
   renderTasks(tasks)
