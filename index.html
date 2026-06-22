@@ -1187,7 +1187,7 @@ function renderHabits(habits, habitLogs7) {
   html += `<div class="habit-head">
     <div></div>
     <div class="habit-days">${days.map((d, i) => `<div class="habit-day-lbl ${d === todayStr ? 'today' : ''}">${dayLabels[i]}</div>`).join('')}</div>
-    <div></div>
+    <div class="habit-right"></div>
   </div>`
 
   habits.forEach(h => {
