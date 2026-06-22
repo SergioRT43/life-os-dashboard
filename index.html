@@ -1132,7 +1132,7 @@ function renderStats(dash, statsRow) {
 }
 
 /* ── RENDER: HABITS ─────────────────────────────────────────── */
-function renderHabits(habits, habitEntries7) {
+function renderHabits(habits, habitLogs7) {
   const body = document.getElementById('habits-body')
   const hd   = document.getElementById('habits-hd-right')
 
@@ -1148,25 +1148,14 @@ function renderHabits(habits, habitEntries7) {
   const days = []
   for (let i = 6; i >= 0; i--) days.push(nDaysAgo(i))
 
-  /* Build completedByDay: date → Set of lowercase habit names */
-  const byDay = {}
-  days.forEach(d => { byDay[d] = new Set() })
+  /* habit_logs → set "habitId|fecha" de completaciones */
+  const done = new Set()
+  ;(habitLogs7 || []).forEach(l => { done.add(`${l.habit_id}|${l.log_date}`) })
 
-  habitEntries7.forEach(e => {
-    const d  = e.entry_date
-    if (!byDay[d]) return
-    const pd = e.parsed_data || {}
-    /* Support different parsed_data shapes from the Telegram bot */
-    if (Array.isArray(pd.habits_completed)) {
-      pd.habits_completed.forEach(h => byDay[d].add(String(h).toLowerCase()))
-    } else if (pd.habit_name) {
-      byDay[d].add(String(pd.habit_name).toLowerCase())
-    } else if (pd.name) {
-      byDay[d].add(String(pd.name).toLowerCase())
-    } else if (pd.habits && typeof pd.habits === 'object') {
-      Object.keys(pd.habits).forEach(h => { if (pd.habits[h]) byDay[d].add(h.toLowerCase()) })
-    }
-  })
+  /* actualizar el tile "Hábitos completados hoy" con datos reales */
+  const todayStr = utcToday()
+  const completedToday = habits.filter(h => done.has(`${h.id}|${todayStr}`)).length
+  setText('tile-habits', `${completedToday}/${habits.length}`)
 
   const attrColor = {
     vitalidad:  'var(--attr-vitality)',
@@ -1184,13 +1173,12 @@ function renderHabits(habits, habitEntries7) {
   let html = '<div class="habits-list">'
   habits.forEach(h => {
     const col   = attrColor[h.attribute?.toLowerCase()] ?? 'var(--accent-violet)'
-    const hName = String(h.name).toLowerCase()
-    const streak = days.filter(d => byDay[d].has(hName)).length
+    const streak = days.filter(d => done.has(`${h.id}|${d}`)).length
 
     let cells = ''
     days.forEach((d, i) => {
-      const done = byDay[d].has(hName)
-      cells += `<div class="habit-cell ${done ? 'on' : ''}" style="--c:${col}" title="${dayLabels[i]}"></div>`
+      const isDone = done.has(`${h.id}|${d}`)
+      cells += `<div class="habit-cell ${isDone ? 'on' : ''}" style="--c:${col}" title="${dayLabels[i]}"></div>`
     })
 
     html += `
@@ -1591,7 +1579,7 @@ async function loadAll() {
   const USD     = encodeURIComponent('$')    /* %24  */
 
   const [
-    dashArr, entries, habits, tasks, habitEntries7, statsArr,
+    dashArr, entries, habits, tasks, habitLogs7, statsArr,
     nutDailyArr, nutGoalsArr,
     balS, balPrevS, accS, accHistPrevS, catsS,
     balUsd, balPrevUsd, accUsd, accHistPrevUsd, catsUsd
@@ -1600,7 +1588,7 @@ async function loadAll() {
     db(`entries?entry_date=eq.${today}&order=created_at.desc`),
     db('habits?active=eq.true&order=name.asc'),
     db(`tasks?status=in.("inbox","next","waiting")&order=priority.asc,created_at.asc&limit=50`),
-    db(`entries?entry_date=gte.${weekAgo}&entry_date=lte.${today}&type=eq.habit&select=entry_date,type,parsed_data`),
+    db(`habit_logs?log_date=gte.${weekAgo}&log_date=lte.${today}&select=habit_id,log_date`),
     db(`daily_stats?stat_date=eq.${today}&select=sleep_hours,habits_completed,habits_total&limit=1`),
     /* ── NUTRITION (vista diaria + metas) ── */
     db(`nutrition_daily?entry_date=eq.${today}&limit=1`),
@@ -1625,7 +1613,7 @@ async function loadAll() {
 
   renderHero(dash)
   renderStats(dash, statsRow)
-  renderHabits(habits, habitEntries7)
+  renderHabits(habits, habitLogs7)
   renderNutrition(nutDailyArr[0] ?? null, nutGoalsArr[0] ?? null, mealEntries)
   renderFinances({ balS, balPrevS, accS, accHistPrevS, catsS, balUsd, balPrevUsd, accUsd, accHistPrevUsd, catsUsd })
   renderAttributes(dash)
