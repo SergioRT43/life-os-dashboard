@@ -988,6 +988,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-gate.js"></script>
 <script>
 /* ── CONFIG ──────────────────────────────────────────────────── */
 const SUPA_URL = 'https://klorwiibsviqlwbplqdr.supabase.co'
@@ -1829,10 +1831,14 @@ document.getElementById('imp-file').addEventListener('change', (e) => {
   if (file) handleCsvFile(file)
 })
 
-/* ── INIT ────────────────────────────────────────────────────── */
+/* ── INIT (con login) ─────────────────────────────────────────── */
 initTopbar()
-loadAll()
-setInterval(loadAll, 60_000)
+;(async () => {
+  const token = await LifeAuth.requireSession()   // muestra login si no hay sesión
+  HDRS.Authorization = 'Bearer ' + token           // usa el JWT del usuario, no la anon key
+  await loadAll()
+  setInterval(loadAll, 60_000)
+})()
 </script>
 </body>
 </html>

@@ -646,6 +646,8 @@
   </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="auth-gate.js"></script>
 <script>
 /* ── CONFIG ──────────────────────────────────────────────────── */
 const SUPA_URL = 'https://klorwiibsviqlwbplqdr.supabase.co'
@@ -1134,8 +1136,12 @@ async function loadAll() {
 /* ── INIT ────────────────────────────────────────────────────── */
 document.getElementById('tb-date').textContent =
   new Date().toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' })
-loadAll()
-setInterval(loadAll, 60_000)
+;(async () => {
+  const token = await LifeAuth.requireSession()   // login si no hay sesión
+  HDRS.Authorization = 'Bearer ' + token           // JWT del usuario, no la anon key
+  await loadAll()
+  setInterval(loadAll, 60_000)
+})()
 </script>
 </body>
 </html>
